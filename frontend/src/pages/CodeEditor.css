@@ -1,0 +1,46 @@
+.editor-container {
+  height: 100vh;
+}
+
+.sash {
+  background-color: #333 !important;
+}
+.sash-hover {
+  background-color: #6a11cb !important;
+}
+
+.editor-pane,
+.output-pane {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.output-pane {
+  background-color: #1e1e1e;
+}
+
+@media screen and (max-width: 768px) {
+  .editor-container .allotment-horizontal > .allotment-sash-container {
+    display: none;
+  }
+
+  .editor-container .allotment-vertical {
+    flex-direction: column !important; /* Force column layout */
+  }
+
+  /* You might need more specific selectors depending on the final structure,
+     but the goal is to switch to a vertical layout.
+     For this library, you might need to conditionally render a vertical Allotment.
+     A simpler approach for mobile is to just use flexbox. */
+  
+  .editor-container-mobile {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 80px);
+  }
+  .editor-pane-mobile, .output-pane-mobile {
+      height: 50vh;
+      overflow-y: auto;
+  }
+}

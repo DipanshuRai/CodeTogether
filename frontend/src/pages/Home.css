@@ -1,0 +1,158 @@
+.homepage {
+  width: 100%;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+  color: var(--text-color);
+}
+
+.hero-section {
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1400') center center/cover no-repeat;
+  padding: 100px 0;
+  text-align: center;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  max-width: 700px;
+  margin: 0 auto 2rem auto;
+  color: var(--text-secondary-color);
+}
+
+.hero-cta{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2rem;
+
+}
+
+.hero-cta-button {
+  padding: 15px 30px;
+  width: 15rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  background-image: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hero-cta-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.features-section {
+  padding: 80px 0;
+  background-color: var(--background-color);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  background-color: var(--surface-color);
+  padding: 2.5rem 2rem;
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid #2a2a2a;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+  font-size: 1.5rem;
+  color: var(--text-color);
+}
+
+.feature-card p {
+  color: var(--text-secondary-color);
+}
+
+.how-it-works-section {
+  padding: 80px 0;
+  background-color: var(--surface-color);
+}
+
+.steps-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 2rem;
+}
+
+.step {
+  text-align: center;
+  max-width: 300px;
+}
+
+.step-number {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-image: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 1rem auto;
+}
+
+.step h3 {
+  font-size: 1.5rem;
+}
+
+.step p {
+  color: var(--text-secondary-color);
+}
+
+.step-arrow {
+  font-size: 3rem;
+  color: var(--primary-color);
+}
+
+@media screen and (max-width: 768px) {
+  .steps-container {
+    flex-direction: column;
+  }
+  .step-arrow {
+    transform: rotate(90deg);
+    margin: 1rem 0;
+  }
+  .hero-title {
+    font-size: 2.5rem;
+  }
+}
