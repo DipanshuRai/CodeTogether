@@ -32,7 +32,7 @@ const Home = () => {
 
         <section id="features" className="features-section">
           <div className="container">
-            <h2 className="section-title">Why Choose CodeSync?</h2>
+            <h2 className="section-title">Why Choose SynCode?</h2>
             <div className="features-grid">
               <div className="feature-card">
                 <FaUsers className="feature-icon" />

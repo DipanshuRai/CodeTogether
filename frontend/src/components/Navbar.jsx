@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import './Navbar.css';
-import { FaCode, FaBars, FaTimes } from 'react-icons/fa';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import "./Navbar.css";
+import { FaCode, FaBars, FaTimes } from "react-icons/fa";
 
 const Navbar = () => {
   // State to manage the mobile menu's visibility
@@ -26,7 +27,7 @@ const Navbar = () => {
         </div>
 
         {/* Navigation Menu */}
-        <ul className={isMenuOpen ? 'nav-menu active' : 'nav-menu'}>
+        <ul className={isMenuOpen ? "nav-menu active" : "nav-menu"}>
           <li className="nav-item">
             <a href="#features" className="nav-links" onClick={toggleMenu}>
               Features
@@ -42,19 +43,26 @@ const Navbar = () => {
               About
             </a>
           </li>
-          {/* Mobile-only Buttons Wrapper */}
+
           <li className="nav-item-mobile">
-            <button className="nav-button btn-login">Login</button>
+            <Link to="/login">
+              <button className="nav-button btn-login">Login</button>
+            </Link>
           </li>
           <li className="nav-item-mobile">
-            <button className="nav-button btn-signup">Sign Up</button>
+            <Link to="/signup">
+              <button className="nav-button btn-signup">Sign Up</button>
+            </Link>
           </li>
         </ul>
 
-        {/* Desktop-only Buttons */}
         <div className="nav-buttons-desktop">
-          <button className="nav-button btn-login">Login</button>
-          <button className="nav-button btn-signup">Sign Up</button>
+          <button className="nav-button btn-login">
+            <Link to="/login">Login</Link>
+          </button>
+          <Link to="/signup">
+            <button className="nav-button btn-signup">Sign Up</button>
+          </Link>
         </div>
       </div>
     </nav>

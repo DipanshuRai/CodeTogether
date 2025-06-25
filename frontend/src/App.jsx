@@ -1,8 +1,8 @@
 import {Routes, Route} from "react-router-dom";
-import Navbar from "./components/Navbar.jsx";
+import Signup from "./pages/Signup.jsx";
+import Login from "./pages/Login.jsx";
 import CodeEditor from './pages/CodeEditor.jsx';
 import Home from './pages/Home.jsx';
-import Footer from "./components/Footer.jsx";
 import './App.css';
 
 const App = () => {
@@ -10,6 +10,8 @@ const App = () => {
     <div className='app'>
       <Routes>
         <Route path="/" element={<Home/>}/>
+        <Route path="/signup" element={<Signup/>}/>
+        <Route path="/login" element={<Login/>}/>
         <Route path="/code-editor" element={<CodeEditor/>}/>
       </Routes>  
     </div>
