@@ -1,14 +1,93 @@
-import { Link } from "react-router-dom";
-import "./Home.css";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaUsers, FaCodeBranch, FaTerminal } from "react-icons/fa";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
+import { useAuth } from "../context/AuthProvider.jsx";
+import { useSocket } from "../context/socket.jsx";
+import toast from "react-hot-toast";
+import "./Home.css";
 
 const Home = () => {
+  const { auth } = useAuth();
+  const socket = useSocket();
+  const isAuthenticated = auth?.user ? true : false;
+  const navigate = useNavigate();
+
+  const [modalType, setModalType] = useState(null);
+  const [roomId, setRoomId] = useState("");
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRoomJoined = () => {
+      console.log("Room joined");
+      socket.on("room-joined", ({ role, roomId }) => {
+        console.log("Role: ", role);
+        console.log("RooomID: ", roomId);
+      });
+      navigate(`/code-editor/${roomId}`);
+    };
+
+    socket.on("room-joined-confirmation", handleRoomJoined);
+
+    return () => {
+      socket.off("room-joined-confirmation");
+    };
+  }, [socket, navigate, roomId]);
+
+  const handleOpenModal = (type) => {
+    if (isAuthenticated) {
+      setModalType(type);
+    } else {
+      navigate("/login");
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalType(null);
+    setRoomId("");
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (!roomId.trim()) {
+      toast.error("Provide Room ID");
+      return;
+    }
+    if (!socket) {
+      toast.error("Internal server error");
+    }
+    socket.emit("join-room", roomId);
+  };
+
   return (
     <>
       <Navbar />
       <main className="homepage">
+        {modalType && (
+          <div className="modal-overlay" onClick={handleCloseModal}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close-button" onClick={handleCloseModal}>
+                X
+              </button>
+              <h2>{modalType === "create" ? "Create Room" : "Join Room"}</h2>
+              <form className="modal-form" onSubmit={handleFormSubmit}>
+                <input
+                  type="text"
+                  className="modal-input"
+                  placeholder="Enter Room ID"
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value)}
+                  required
+                />
+                <button className="hero-cta-button modal-submit-button">
+                  {modalType === "create" ? "Create" : "Join"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
         <section className="hero-section">
           <div className="container">
             <h1 className="hero-title">
@@ -21,11 +100,21 @@ const Home = () => {
             </p>
 
             <div className="hero-cta">
-              <button className="hero-cta-button">
-                <Link to="/code-editor">Code Solo</Link>
+              <Link to={isAuthenticated ? "/code-editor" : "/login"}>
+                <button className="hero-cta-button">Code Solo</button>
+              </Link>
+              <button
+                className="hero-cta-button"
+                onClick={() => handleOpenModal("join")}
+              >
+                Join Room
               </button>
-              <button className="hero-cta-button">Join Room</button>
-              <button className="hero-cta-button">Create Room</button>
+              <button
+                className="hero-cta-button"
+                onClick={() => handleOpenModal("create")}
+              >
+                Create Room
+              </button>
             </div>
           </div>
         </section>

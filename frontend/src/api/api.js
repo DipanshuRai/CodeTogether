@@ -1,9 +1,9 @@
 import axios from "axios";
 import { LANGUAGE_VERSIONS } from "../constants.js";
 
-const API = axios.create({
-  baseURL: "https://emkc.org/api/v2/piston",
-});
+// const API = axios.create({
+//   baseURL: "https://emkc.org/api/v2/piston",
+// });
 
 export const executeCode = async (language, sourceCode) => {
     
@@ -17,7 +17,7 @@ export const executeCode = async (language, sourceCode) => {
       throw new Error("Invalid source code");
     }
 
-    const response = await API.post("/execute", {
+    const response = await axios.post("https://emkc.org/api/v2/piston/execute", {
       language: language,
       version: LANGUAGE_VERSIONS[language],
       files: [

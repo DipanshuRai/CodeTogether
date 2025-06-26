@@ -1,12 +1,49 @@
-.editor-container {
+.main-container {
+  display: flex;
   height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 5rem;
+  background-color: #15151595;
+  border-right: 1px solid rgba(63, 63, 63, 0.774);
+  flex-shrink: 0;
+  color: #888;
+  display: flex;
+  align-items:flex-end;
+  justify-content: center;
+}
+
+.user-frame{
+  margin: 1rem;
+  padding: 0.9rem;
+  background-color: #f3adad;
+  color: #333;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border-radius: 50%;
+  border: none;
+  transition: all 0.3s ease-in-out;
+}
+
+.user-frame:hover{
+  background-color: #f79090;
+  cursor: pointer;
+}
+
+.editor-container {
+  height: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .sash {
   background-color: #333 !important;
 }
 .sash-hover {
-  background-color: #6a11cb !important;
+  background-color: #555 !important;
 }
 
 .editor-pane,
@@ -14,33 +51,13 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden; 
+}
+
+.editor {
+  flex-grow: 1;
 }
 
 .output-pane {
   background-color: #1e1e1e;
-}
-
-@media screen and (max-width: 768px) {
-  .editor-container .allotment-horizontal > .allotment-sash-container {
-    display: none;
-  }
-
-  .editor-container .allotment-vertical {
-    flex-direction: column !important; /* Force column layout */
-  }
-
-  /* You might need more specific selectors depending on the final structure,
-     but the goal is to switch to a vertical layout.
-     For this library, you might need to conditionally render a vertical Allotment.
-     A simpler approach for mobile is to just use flexbox. */
-  
-  .editor-container-mobile {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 80px);
-  }
-  .editor-pane-mobile, .output-pane-mobile {
-      height: 50vh;
-      overflow-y: auto;
-  }
 }
