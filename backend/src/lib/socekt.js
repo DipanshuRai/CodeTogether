@@ -1,73 +1,117 @@
-import express from 'express';
-import http from 'http';
-import { Server } from 'socket.io'
-import dotenv from 'dotenv'
+import express from "express";
+import http from "http";
+import { Server } from "socket.io";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-const app=express();
-const server=http.createServer(app);
+const app = express();
+const server = http.createServer(app);
 
-const io=new Server(server, {
-    cors:{
-        origin:['http://localhost:5173'],
-        credentials: true
-    }
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  },
 });
 
-// Rooms: { [roomId]: { adminId: socket.id, users: Set<socket.id> } }
+// Rooms: { [roomId]: { adminId: socket.id, Map<socket.id, username> } }
 const rooms = {};
 
-io.on('connect', (socket)=>{
-    console.log(`User connected: ${socket.id}`);
+const handleLeaveRoom = (socket) => {
+  const roomId = socket.roomId;
+  if (!roomId || !rooms[roomId]) {
+    return;
+  }
 
-    socket.on('join-room', (roomId)=>{
-        socket.join(roomId);
+  const room = rooms[roomId];
+  const username = room.users.get(socket.id)
 
-        if(!rooms[roomId]){
-            rooms[roomId]={
-                adminId:socket.id,
-                users:new Set()
-            };
-        }
+  room.users.delete(socket.id);
+  console.log(`User ${socket.id} removed from room ${roomId}. Users left: ${room.users.size}`);
 
-        rooms[roomId].users.add(socket.id);
+  if(username){
+    socket.to(roomId).emit("user-left", username);
+  }
 
-        socket.emit('room-joined-confirmation');
+  if (room.users.size === 0) {
+    console.log(`Room ${roomId} is empty, deleting it.`);
+    delete rooms[roomId];
+    return;
+  }
 
-        socket.emit('room-joined', {
-            role: socket.id===rooms[roomId].adminId ? 'admin' : 'user',
-            roomId,
-        });
-    });
+  if (socket.id === room.adminId) {
+    const newAdminId = room.users.keys().next().value; // Get the first user's ID
+    room.adminId = newAdminId;
+    console.log(`Admin disconnected. New admin for room ${roomId} is ${newAdminId}`);
+    io.to(newAdminId).emit("new-admin");
+  }
 
-    socket.on('code-change', ({ roomId, language, code })=>{
-        socket.to(roomId).emit('remote-code-change', {language, code});
-    });
+  socket.leave(roomId);
+  socket.roomId = null;
+};
 
-    socket.on('disconnect', ()=>{
-        console.log(`User disconnected: ${socket.id}`);
-        for(const roomId in rooms){
-            roomId.users.delete(socket.id);
+io.on("connect", (socket) => {
+  console.log(`User connected: ${socket.id}`);
 
-            if(socket.id===roomId.adminId){
-                const newAdminId=[...roomId.users][0];
-                roomId.adminId=newAdminId || null;
+  socket.on("create-room", (roomId, name, callback) => {
+    if (rooms[roomId]) {
+      return callback({
+        success: false,
+        message: "Room already exists. Try a different ID.",
+      });
+    }
 
-                if(newAdminId){
-                    io.to(newAdminId).emit('new-admin');
-                }
-            }
+    socket.join(roomId);
+    socket.roomId = roomId;
 
-            if(roomId.users.size===0){
-                delete rooms[roomId];
-            }
-        }
-    });
+    rooms[roomId] = {
+      adminId: socket.id,
+      users: new Map([[socket.id, name]]),
+    };
 
-    socket.on('connect_error', (err) => {
-        console.error('Connection error:', err.message);
-    });
+    console.log(`User ${socket.id} created and joined room ${roomId}`);
+    callback({ success: true, roomId, message: "Room created" });
+  });
+
+  socket.on("join-room", (roomId, name, callback) => {
+    if (!rooms[roomId]) {
+      return callback({ success: false, message: "Room not found." });
+    }
+    console.log("Name: ", name);
+
+    socket.join(roomId);
+    socket.roomId = roomId;
+
+    rooms[roomId].users.set(socket.id, name);
+
+    console.log(`User ${socket.id} joined room ${roomId}`);
+    socket.to(roomId).emit("user-joined", name);
+    callback({ success: true, roomId, message: "Room joined" });
+  });
+
+  socket.on("check-user", (roomId, callback) => {
+    if (socket.roomId === roomId && rooms[roomId]?.users.has(socket.id)) {
+      callback({ success: true });
+    } else {
+      callback({ success: false, message: "Provide Room ID" });
+    }
+  });
+
+  socket.on("code-change", ({ language, code }) => {
+    const roomId = socket.roomId;
+    socket.to(roomId).emit("remote-code-change", { language, code });
+  });
+
+  socket.on("leave-room", () => {
+    console.log(`User ${socket.id} is explicitly leaving room ${socket.roomId}`);
+    handleLeaveRoom(socket);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`User disconnected: ${socket.id}`);
+    handleLeaveRoom(socket);
+  });
 });
 
-export {app, io, server};
+export { app, io, server };

@@ -18,6 +18,14 @@ axiosPrivate.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
+    // Check if the failed request was for the refresh token endpoint ***
+    if (originalRequest.url === '/api/auth/refresh-token') {
+        // If the refresh token request itself fails, we can't recover.
+        // Here you would typically handle logout logic.
+        console.error("Refresh token is invalid or expired. Logging out.");
+        return Promise.reject(error);
+    }
+
     // If token is expired and it's not a retry already
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -32,7 +40,7 @@ axiosPrivate.interceptors.response.use(
         const newAccessToken = res.data.accessToken;
 
         // Set new token in headers
-        axiosPrivate.defaults.headers['Authorization'] = `Bearer ${newAccessToken}`;
+        axiosPrivate.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
 
         // Retry the original request

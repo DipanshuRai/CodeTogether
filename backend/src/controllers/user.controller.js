@@ -23,9 +23,8 @@ const generateAccessAndRefreshTokens = async (userId) => {
 };
 
 export const refreshAccessToken = async (req, res) => {
-  try {
-    const incomingRefreshToken =
-      req.cookies.refreshToken || req.body.refreshToken;
+  try {    
+    const incomingRefreshToken = req.cookies.refreshToken;
 
     if (!incomingRefreshToken) {
       return res.status(400).json({ message: "Unauthorized request" });

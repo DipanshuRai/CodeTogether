@@ -7,9 +7,9 @@ import { CODE_SNIPPETS } from "../constants";
 import { useSocket } from "../context/socket";
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
-import "./CodeEditor.css";
 import { useAuth } from "../context/AuthProvider";
 import toast from "react-hot-toast";
+import "./CodeEditor.css";
 
 const CodeEditor = () => {
   const { auth } = useAuth();
@@ -19,40 +19,61 @@ const CodeEditor = () => {
   const [language, setLanguage] = useState("javascript");
   const [value, setValue] = useState(CODE_SNIPPETS[language]);
   const [role, setRole] = useState("");
-
-  const { roomId: urlRoomId } = useParams();
+  const { roomId } = useParams();
 
   useEffect(() => {
-    if (!auth.user) {
-      navigate("/login");
-    }
-  }, [auth, navigate]);
+    if (!socket || roomId === "solo") return;
+
+    socket.emit("check-user", roomId, (response) => {
+      if (!response.success) {
+        console.log("Access denied. Please rejoin.");
+        toast.error(response.message || "Access denied. Please rejoin.");
+        navigate("/");
+      } else {
+        console.log("User verified for room:", roomId);
+      }
+    });
+  }, [socket, roomId, navigate]);
+
+  useEffect(() => {
+    return () => {
+      if (socket && roomId !== "solo") {
+        console.log(`Emitting leave-room for room: ${roomId}`);
+        socket.emit("leave-room");
+      }
+    };
+  }, [socket, roomId]);
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleRoomJoined = ({ role, roomId }) => {
-      console.log("Room joined: ", role, roomId);
-      setRole(role === "admin" ? "Admin" : "User");
-      toast.success(
-        `Room ${roomId} ${role === "admin" ? "created" : "joined"}`
-      );
+    const handleRemoteChange = ({ code, language }) => {
+      setLanguage(language);
+      setValue(code);
     };
 
-    // socket.on("room-joined", handleRoomJoined);
-    socket.on("room-joined", ({role, roomId})=>{
-      console.log("Role: ",role);
-      console.log("RooomID: ",roomId);
-    });
+    const handleNewAdmin = () => {
+      toast("You are the new admin!");
+    };
 
-    socket.on("new-admin", () => {
-      toast.success("The admin left. You are the new admin!");
-      setRole("Admin");
-    });
+    const handleUserJoined = (name) => {
+      toast(`${name} joined the room.`);
+    };
+
+    const handleUserLeft = (name) => {
+      toast(`${name} left the room.`);
+    };
+
+    socket.on("remote-code-change", handleRemoteChange);
+    socket.on("new-admin", handleNewAdmin);
+    socket.on("user-joined", handleUserJoined);
+    socket.on("user-left", handleUserLeft);
 
     return () => {
-      socket.off("room-joined", handleRoomJoined);
-      socket.off("new-admin");
+      socket.off("remote-code-change", handleRemoteChange);
+      socket.off("new-admin", handleNewAdmin);
+      socket.off("user-joined", handleUserJoined);
+      socket.off("user-left", handleUserLeft);
     };
   }, [socket]);
 
@@ -61,7 +82,7 @@ const CodeEditor = () => {
     const snippet = CODE_SNIPPETS[language];
     setValue(snippet);
 
-    if (socket) {
+    if (socket && roomId !== "solo") {
       socket.emit("code-change", { language: language, code: snippet });
     }
   };
@@ -73,29 +94,13 @@ const CodeEditor = () => {
 
   const handleCodeChange = (newValue) => {
     setValue(newValue);
-    if (socket) {
+    if (socket && roomId !== "solo") {
       socket.emit("code-change", {
-        roomId: urlRoomId,
         language,
         code: newValue,
       });
     }
   };
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleRemoteChange = ({ code, language }) => {
-      setLanguage(language);
-      setValue(code);
-    };
-
-    socket.on("remote-code-change", handleRemoteChange);
-
-    return () => {
-      socket.off("remote-code-change", handleRemoteChange);
-    };
-  }, [socket]);
 
   return (
     <div className="main-container">

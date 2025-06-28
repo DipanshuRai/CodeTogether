@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
 import { axiosPrivate } from "../api/axios";
 import "./Loader.css";
+import axios from "../api/axios";
 
 
 const PersistLogin = () => {
@@ -14,11 +15,14 @@ const PersistLogin = () => {
 
     const verifyRefreshToken = async () => {
       try {
-        const res=await axiosPrivate.post('/api/auth/refresh-token');
+        const res=await axios.post('/api/auth/refresh-token',{},{withCredentials:true});
         setAuth({
             accessToken: res.data.accessToken,
             user: res.data.user
-        })
+        });
+        axiosPrivate.defaults.headers.common['Authorization'] = `Bearer ${res.data.accessToken}`;
+      } catch (err) {
+        console.error("Persistent login failed");
       } finally {
         isMounted && setIsLoading(false);
       }
@@ -28,7 +32,7 @@ const PersistLogin = () => {
     return () => {
       isMounted = false;
     };
-  }, [auth?.accessToken]);
+  }, []);
 
   return (
     <>

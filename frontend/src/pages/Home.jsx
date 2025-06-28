@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUsers, FaCodeBranch, FaTerminal } from "react-icons/fa";
 import Navbar from "../components/Navbar.jsx";
@@ -6,6 +6,7 @@ import Footer from "../components/Footer.jsx";
 import { useAuth } from "../context/AuthProvider.jsx";
 import { useSocket } from "../context/socket.jsx";
 import toast from "react-hot-toast";
+import { BeatLoader } from "react-spinners";
 import "./Home.css";
 
 const Home = () => {
@@ -16,25 +17,7 @@ const Home = () => {
 
   const [modalType, setModalType] = useState(null);
   const [roomId, setRoomId] = useState("");
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleRoomJoined = () => {
-      console.log("Room joined");
-      socket.on("room-joined", ({ role, roomId }) => {
-        console.log("Role: ", role);
-        console.log("RooomID: ", roomId);
-      });
-      navigate(`/code-editor/${roomId}`);
-    };
-
-    socket.on("room-joined-confirmation", handleRoomJoined);
-
-    return () => {
-      socket.off("room-joined-confirmation");
-    };
-  }, [socket, navigate, roomId]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOpenModal = (type) => {
     if (isAuthenticated) {
@@ -56,9 +39,23 @@ const Home = () => {
       return;
     }
     if (!socket) {
-      toast.error("Internal server error");
+      toast.error("Server error");
+      return;
     }
-    socket.emit("join-room", roomId);
+    setIsSubmitting(true);
+
+    const eventToEmit = modalType === "create" ? "create-room" : "join-room";
+
+    socket.emit(eventToEmit, roomId, auth?.user?.fullname, (response) => {
+      setIsSubmitting(false);
+
+      if (response.success) {
+        toast.success(response.message);
+        navigate(`/code-editor/${response.roomId}`);
+      } else {
+        toast.error(response.message);
+      }
+    });
   };
 
   return (
@@ -81,8 +78,18 @@ const Home = () => {
                   onChange={(e) => setRoomId(e.target.value)}
                   required
                 />
-                <button className="hero-cta-button modal-submit-button">
-                  {modalType === "create" ? "Create" : "Join"}
+                <button
+                  className="hero-cta-button modal-submit-button"
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <BeatLoader />
+                  ) : modalType === "create" ? (
+                    "Create"
+                  ) : (
+                    "Join"
+                  )}{" "}
                 </button>
               </form>
             </div>
@@ -100,7 +107,7 @@ const Home = () => {
             </p>
 
             <div className="hero-cta">
-              <Link to={isAuthenticated ? "/code-editor" : "/login"}>
+              <Link to={isAuthenticated ? "/code-editor/solo" : "/login"}>
                 <button className="hero-cta-button">Code Solo</button>
               </Link>
               <button
