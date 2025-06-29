@@ -20,6 +20,9 @@ const CodeEditor = () => {
   const [value, setValue] = useState(CODE_SNIPPETS[language]);
   const [role, setRole] = useState("");
   const { roomId } = useParams();
+  const [isError, setIsError] = useState(false);
+  const [output, setOutput] = useState(null);
+  const [isLoading, setIsLoading]=useState(false);
 
   useEffect(() => {
     if (!socket || roomId === "solo") return;
@@ -102,6 +105,11 @@ const CodeEditor = () => {
     }
   };
 
+  useEffect(() => {
+    setOutput(null);
+    setIsError(false);
+  }, [language]);
+
   return (
     <div className="main-container">
       <div className="sidebar">
@@ -114,13 +122,21 @@ const CodeEditor = () => {
         </div>
       </div>
       <div className="editor-container">
+        <EditorHeader
+          language={language}
+          onSelect={onSelect}
+          editorRef={editorRef}
+          setIsError={setIsError}
+          setOutput={setOutput}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+        />
         <Allotment>
-          <Allotment.Pane minSize={400}>
+          <Allotment.Pane minSize={300}>
             <div className="editor-pane">
-              <EditorHeader language={language} onSelect={onSelect} />
               <Editor
                 className="editor"
-                height="100%"
+                height="92vh" // Editor header is 8vh
                 theme="vs-dark"
                 language={language}
                 defaultValue={CODE_SNIPPETS[language]}
@@ -132,7 +148,11 @@ const CodeEditor = () => {
           </Allotment.Pane>
           <Allotment.Pane minSize={300}>
             <div className="output-pane">
-              <Output editorRef={editorRef} language={language} />
+              <Output
+                isError={isError}
+                output={output}
+                isLoading={isLoading}
+              />
             </div>
           </Allotment.Pane>
         </Allotment>

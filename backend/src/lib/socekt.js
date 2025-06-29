@@ -39,16 +39,25 @@ const handleLeaveRoom = (socket) => {
     delete rooms[roomId];
     return;
   }
-
-  if (socket.id === room.adminId) {
-    const newAdminId = room.users.keys().next().value; // Get the first user's ID
-    room.adminId = newAdminId;
-    console.log(`Admin disconnected. New admin for room ${roomId} is ${newAdminId}`);
-    io.to(newAdminId).emit("new-admin");
+  else{
+    if (socket.id === room.adminId) {
+      const newAdminId = room.users.keys().next().value; // Get the first user's ID
+      room.adminId = newAdminId;
+      console.log(`Admin disconnected. New admin for room ${roomId} is ${newAdminId}`);
+      io.to(newAdminId).emit("new-admin");
+    }
+    sendUpdatedUserList(roomId);
   }
-
+  
   socket.leave(roomId);
   socket.roomId = null;
+};
+
+const sendUpdatedUserList = (roomId) => {
+  if (rooms[roomId]) {
+    const userList = Array.from(rooms[roomId].users.values());
+    io.to(roomId).emit('update-user-list', userList);
+  }
 };
 
 io.on("connect", (socket) => {
@@ -72,13 +81,14 @@ io.on("connect", (socket) => {
 
     console.log(`User ${socket.id} created and joined room ${roomId}`);
     callback({ success: true, roomId, message: "Room created" });
+
+    sendUpdatedUserList(roomId);
   });
 
   socket.on("join-room", (roomId, name, callback) => {
     if (!rooms[roomId]) {
       return callback({ success: false, message: "Room not found." });
     }
-    console.log("Name: ", name);
 
     socket.join(roomId);
     socket.roomId = roomId;
@@ -88,6 +98,8 @@ io.on("connect", (socket) => {
     console.log(`User ${socket.id} joined room ${roomId}`);
     socket.to(roomId).emit("user-joined", name);
     callback({ success: true, roomId, message: "Room joined" });
+
+    sendUpdatedUserList(roomId);
   });
 
   socket.on("check-user", (roomId, callback) => {
@@ -102,6 +114,10 @@ io.on("connect", (socket) => {
     const roomId = socket.roomId;
     socket.to(roomId).emit("remote-code-change", { language, code });
   });
+
+  socket.on("get-users-list", (roomId, callback)=>{
+    callback(rooms[roomId]);
+  })
 
   socket.on("leave-room", () => {
     console.log(`User ${socket.id} is explicitly leaving room ${socket.roomId}`);

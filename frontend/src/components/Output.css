@@ -1,7 +1,7 @@
 .output-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 92vh;
   padding: 1rem;
   background-color: #1e1e1e;
   color: #d4d4d4;
@@ -19,21 +19,6 @@
   margin: 0;
   font-size: 1.2rem;
   font-weight: 600;
-}
-
-.run-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: #0e639c;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
 }
 
 .run-button:hover:not(:disabled) {
@@ -57,7 +42,6 @@
   flex-direction: column;
 }
 
-/* Placeholder and Loader */
 .output-placeholder {
   color: #858585;
   font-style: italic;
@@ -68,7 +52,7 @@
   width: 32px;
   height: 32px;
   border: 4px solid #4a4a4a;
-  border-bottom-color: #6a11cb;
+  border-bottom-color: #0e639c;
   border-radius: 50%;
   display: inline-block;
   box-sizing: border-box;
@@ -76,7 +60,6 @@
   margin: auto;
 }
 
-/* Output Content Styling */
 .output-content {
   width: 100%;
 }
@@ -103,7 +86,7 @@
 }
 
 .status-icon.error {
-  color: #e53e3e; /* Red */
+  color: #e53e3e;
 }
 .output-content.error .output-status {
   color: #e53e3e;
