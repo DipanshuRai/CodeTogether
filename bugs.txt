@@ -1,0 +1,1 @@
+1. when new user joins, he did not see the updated code until an updation is performed after join

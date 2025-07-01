@@ -23,76 +23,30 @@
   transition: background-color 0.2s ease;
 }
 
-.util-container {
-  position: relative;
-  padding: 0.6rem;
-  background-color: #333;
-  border-radius: 10px;
+.media-controls {
+  display: flex;
+  gap: 10px;
 }
 
-.users {
-  padding: 5px 7px;
-  transition: all 0.3s ease-in-out;
-  color: white; 
-}
-
-.users:hover {
-  background-color: #0e639c;
+.control-btn {
+  background-color: #4a4a4e;
+  color: white;
+  border: none;
   border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-}
-
-.user-list-popup {
-  position: absolute;
-  top: 120%; 
-  right: 0;
-  background-color: #2a2a2e; 
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 1rem;
-  min-width: 200px;
-  z-index: 10;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  color: #d4d4d4;
-}
-
-.user-list-popup::after {
-  content: "";
-  position: absolute;
-  bottom: 100%; 
-  right: 20px;
-  border-width: 7px;
-  border-style: solid;
-  border-color: transparent transparent #2a2a2e transparent;
-}
-
-.user-list-popup h4 {
-  margin: 0 0 10px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #444;
   font-size: 1rem;
-  color: #fff;
+  transition: background-color 0.2s ease;
 }
 
-.user-list-popup ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  max-height: 200px;
-  overflow-y: auto;
+.control-btn:hover {
+  background-color: #5a5a5e;
 }
 
-.user-list-popup li {
-  padding: 8px 4px;
-  font-size: 0.9rem;
-}
-
-.user-list-popup li:not(:last-child) {
-  border-bottom: 1px solid #333;
-}
-
-.user-list-popup .no-users {
-  font-style: italic;
-  color: #888;
-  border-bottom: none;
+.control-btn.disabled {
+  background-color: #e53e3e;
 }

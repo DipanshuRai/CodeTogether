@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthProvider';
 
+const BASE_URL="http://localhost:5000";
+// const BASE_URL="http://192.168.0.113:5000";
+
 export const SocketContext = createContext(null);
 
 export const useSocket = () => {
@@ -15,7 +18,8 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         if(!auth?.accessToken) return;
 
-        const newSocket = io("http://localhost:5000", {
+        const newSocket = io(BASE_URL, {
+            transports: ['websocket'],
             withCredentials: true,
         });
         

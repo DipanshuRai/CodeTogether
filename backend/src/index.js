@@ -10,10 +10,11 @@ import authRoutes from './routes/auth.route.js';
 dotenv.config();
 const PORT=process.env.PORT;
 
-app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
-}));
+// app.use(cors({
+//     origin: ['http://localhost:5173', 'http://192.168.0.113:5173'],
+//     // origin: process.env.CORS_ORIGIN,
+//     credentials: true
+// }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));

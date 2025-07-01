@@ -1,0 +1,60 @@
+/* This ensures the component fills the Allotment pane */
+.input-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  box-sizing: border-box; /* Add this for consistent padding behavior */
+}
+
+/* This is the main bordered box, like .output-area */
+.input-area {
+  flex-grow: 1;
+  background: #252526;
+  border-radius: 5px;
+  border: 1px solid #333;
+  padding: 1rem;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Prevent textarea from overflowing the rounded corners */
+}
+
+/* Style for the header */
+.input-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #333;
+  color: #a0a0a0; /* A neutral color for the input header */
+  flex-shrink: 0;
+}
+
+.header-icon {
+  font-size: 1.2rem;
+}
+
+/* The textarea itself */
+.input-textarea {
+  flex-grow: 1; /* This is crucial for it to fill the space */
+  background-color: transparent;
+  border: none;
+  color: #d4d4d4;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: none;
+  outline: none;
+  padding: 0;
+  width: 100%;
+}
+
+/* Style for the placeholder text */
+.input-textarea::placeholder {
+  color: #858585;
+  font-style: italic;
+}

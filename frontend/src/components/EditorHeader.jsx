@@ -1,12 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { executeCode } from "../api/executeCode.js";
 import LanguageSelector from "./LanguageSelector";
-import { executeCode } from "../api/api.js";
-import { FaPlay } from "react-icons/fa";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUsers } from "@fortawesome/free-solid-svg-icons";
-import { useSocket } from "../context/socket.jsx";
-import "./EditorHeader.css";
+import {
+  FaPlay,
+  FaUsers,
+  FaMicrophone,
+  FaMicrophoneSlash,
+  FaVideo,
+  FaVideoSlash,
+} from "react-icons/fa";
 import { useParams } from "react-router-dom";
+import "./EditorHeader.css";
 
 const EditorHeader = ({
   language,
@@ -16,46 +20,35 @@ const EditorHeader = ({
   setOutput,
   isLoading,
   setIsLoading,
+  onToggleUsers,
+  myStream,
+  input,
 }) => {
-  const socket = useSocket();
-  const [userList, setUserList] = useState([]);
   const { roomId } = useParams();
-  const [isUserListOpen, setIsUserListOpen] = useState(false);
-  const userListRef = useRef(null);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
-  useEffect(() => {
-    if (!socket) return;
+  const toggleAudio = () => {
+    myStream
+      .getAudioTracks()
+      .forEach((track) => (track.enabled = !isAudioEnabled));
+    setIsAudioEnabled(!isAudioEnabled);
+  };
 
-    const handleUserListUpdate = (users) => {
-      setUserList(users);
-    };
-
-    socket.on("update-user-list", handleUserListUpdate);
-    return () => {
-      socket.off("update-user-list", handleUserListUpdate);
-    };
-  }, [socket]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userListRef.current && !userListRef.current.contains(event.target)) {
-        setIsUserListOpen(false);
-      }
-    };
-    if (isUserListOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isUserListOpen]);
+  const toggleVideo = () => {
+    myStream
+      .getVideoTracks()
+      .forEach((track) => (track.enabled = !isVideoEnabled));
+    setIsVideoEnabled(!isVideoEnabled);
+  };
 
   const runCode = async () => {
     const sourceCode = editorRef.current.getValue();
+    
     if (!sourceCode) return;
     try {
       setIsLoading(true);
-      const { run: result } = await executeCode(language, sourceCode);
+      const { run: result } = await executeCode(language, sourceCode, input);
       setOutput(result.output.split("\n"));
       result.stderr ? setIsError(true) : setIsError(false);
     } catch (error) {
@@ -75,30 +68,25 @@ const EditorHeader = ({
         <span>{isLoading ? "Running..." : "Run Code"}</span>
       </button>
 
-      <div className="util-container" ref={userListRef}>
-        {roomId !== "solo" && (
-          <>
-            <div
-              className="users"
-              onClick={() => setIsUserListOpen((prev) => !prev)}
-            >
-              <FontAwesomeIcon icon={faUsers} />
-            </div>
-            {isUserListOpen && (
-              <div className="user-list-popup">
-                <h4>Connected Users ({userList.length})</h4>
-                <ul>
-                  {userList.length > 0 ? (
-                    userList.map((user, index) => <li key={index}>{user}</li>)
-                  ) : (
-                    <li className="no-users">Just you for now!</li>
-                  )}
-                </ul>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {roomId !== "solo" && (
+        <div className="media-controls">
+          <button
+            onClick={toggleAudio}
+            className={`control-btn ${!isAudioEnabled ? "disabled" : ""}`}
+          >
+            {isAudioEnabled ? <FaMicrophone /> : <FaMicrophoneSlash />}
+          </button>
+          <button
+            onClick={toggleVideo}
+            className={`control-btn ${!isVideoEnabled ? "disabled" : ""}`}
+          >
+            {isVideoEnabled ? <FaVideo /> : <FaVideoSlash />}
+          </button>
+          <button className={`control-btn`} onClick={onToggleUsers}>
+            <FaUsers />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

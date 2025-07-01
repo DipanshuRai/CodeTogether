@@ -1,23 +1,18 @@
 import axios from "axios";
 import { LANGUAGE_VERSIONS } from "../constants.js";
 
-// const API = axios.create({
-//   baseURL: "https://emkc.org/api/v2/piston",
-// });
-
-export const executeCode = async (language, sourceCode) => {
+export const executeCode = async (language, sourceCode, stdin="") => {
     
   try {
-    // Validate input
-    if (!language || !LANGUAGE_VERSIONS["javascript"]) {        
+    if (!language || !LANGUAGE_VERSIONS[language]) {       
       throw new Error(`Unsupported language: ${language}`);
     }
     
     if (!sourceCode || typeof sourceCode !== "string") {
       throw new Error("Invalid source code");
     }
-
-    const response = await axios.post("https://emkc.org/api/v2/piston/execute", {
+    
+    const payload = {
       language: language,
       version: LANGUAGE_VERSIONS[language],
       files: [
@@ -25,13 +20,11 @@ export const executeCode = async (language, sourceCode) => {
           content: sourceCode,
         },
       ],
-    });
+      stdin: stdin,
+    };
 
-    // // Check for API-level errors
-    // if (response.data.run && response.data.run.stderr) {
-    //   throw new Error(response.data.run.stderr);
-    // }
-    
+    const response = await axios.post("https://emkc.org/api/v2/piston/execute", payload);
+
     return response.data;
   } catch (error) {
     if (error.response) {
