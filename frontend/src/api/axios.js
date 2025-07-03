@@ -4,7 +4,7 @@ const BASE_URL="http://localhost:5000";
 // const BASE_URL="http://192.168.0.113:5000";
 
 export default axios.create({
-    baseURL: BASE_URL
+    baseURL: BASE_URL,
 });
 
 export const axiosPrivate=axios.create({
@@ -32,7 +32,7 @@ axiosPrivate.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const res = await axios.post(
-          "/api/auth/refresh-token",
+          `${BASE_URL}/api/auth/refresh-token`,
           {},
           { withCredentials: true }
         );

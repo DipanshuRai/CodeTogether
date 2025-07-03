@@ -22,7 +22,7 @@ const Footer = () => {
           <a href="/contact">Contact</a>
         </div>
         <p className="footer-copyright">
-          © {new Date().getFullYear()} SynCode. All rights reserved.
+          © {new Date().getFullYear()} CodeTogether. All rights reserved.
         </p>
       </div>
     </footer>

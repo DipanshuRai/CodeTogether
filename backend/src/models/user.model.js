@@ -1,38 +1,45 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 dotenv.config();
 
-const userSchema=new mongoose.Schema(
-    {
-        email:{
-            type: String,
-            required: true,
-            unique: true,
-        },
-        fullname:{
-            type: String,
-            required: true,
-        },
-        password:{
-            type: String,
-            required: true,
-            minlength: 6,
-        },
-        refreshToken:{
-            type: String
-        }
+const userSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
     },
-    {
-        timestamps: true
-    }
+    fullname: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: false,
+      minlength: 6,
+    },
+    authProvider: {
+      type: String,
+      required: true,
+      enum: ["local", "google"],
+      default: "local",
+    },
+    refreshToken: {
+      type: String,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) 
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password") || !this.password) {
     return next();
-  this.password = await bcrypt.hash(this.password, 10); // Hash the plain text password with a salt round of 10
+  }
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
@@ -68,6 +75,6 @@ userSchema.methods = {
   },
 };
 
-const User=mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
 
 export default User;

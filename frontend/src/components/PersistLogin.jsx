@@ -1,52 +1,50 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
 import { axiosPrivate } from "../api/axios";
-import "./Loader.css";
 import axios from "../api/axios";
 
-
 const PersistLogin = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const { auth, setAuth } = useAuth();
+  const { auth, setAuth, setIsLoading } = useAuth();
 
   useEffect(() => {
     let isMounted = true;
 
     const verifyRefreshToken = async () => {
       try {
-        const res=await axios.post('/api/auth/refresh-token',{},{withCredentials:true});
+        const res = await axios.post(
+          "/api/auth/refresh-token",
+          {},
+          { withCredentials: true }
+        );
         setAuth({
-            accessToken: res.data.accessToken,
-            user: res.data.user
+          accessToken: res.data.accessToken,
+          user: res.data.user,
         });
-        axiosPrivate.defaults.headers.common['Authorization'] = `Bearer ${res.data.accessToken}`;
+        axiosPrivate.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${res.data.accessToken}`;
       } catch (err) {
-        console.error("Persistent login failed");
+        console.error("Persistent login failed: No valid refresh token.");
       } finally {
-        isMounted && setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
-    !auth?.accessToken ? verifyRefreshToken() : setIsLoading(false);
+
+    if (!auth?.accessToken) {
+      verifyRefreshToken();
+    } else {
+      setIsLoading(false);
+    }
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  return (
-    <>
-      {isLoading ? (
-        <div className="loading-indicator">
-          <div></div>
-          <div></div>
-          <div></div>
-        </div>
-      ) : (
-        <Outlet />
-      )}
-    </>
-  );
+  return <Outlet />;
 };
 
 export default PersistLogin;

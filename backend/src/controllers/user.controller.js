@@ -18,7 +18,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
     return { accessToken, refreshToken };
   } catch (error) {
     console.log("Error in generateAccessAndRefreshToken controller: ", error);
-    return res.status(500).json({ message: "Internal Server error" });
+    throw new Error("Something went wrong while generating tokens");
   }
 };
 
@@ -125,7 +125,7 @@ export const signup = async (req, res) => {
     };
 
     return res
-      .status(200)
+      .status(201)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, {...options, maxAge: 7 * 24 * 60 * 60 * 1000})
       .json({
@@ -180,6 +180,59 @@ export const login = async(req, res) => {
     console.log("Error in login controller: ", error);
     res.status(500).json({message: "Internal server error"});
   } 
+};
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { email, fullname } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required for Google login." });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      if (user.authProvider === 'local') {
+        return res.status(409).json({ message: "This email is already registered. Please log in with your password." });
+      }
+    } 
+    else {
+      user = await User.create({
+        fullname: fullname,
+        email,
+        authProvider: 'google',
+        // password is omitted
+      });
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    delete userResponse.refreshToken;
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+    };
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, { ...options, maxAge: 15 * 60 * 1000 })
+      .cookie("refreshToken", refreshToken, { ...options, maxAge: 7 * 24 * 60 * 60 * 1000 })
+      .json({
+        user: userResponse,
+        success: true,
+        message: "Logged in successfully",
+        accessToken,
+      });
+
+  } catch (error) {
+    console.log("Error in googleLogin controller: ", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const logout = async(req, res) => {

@@ -12,8 +12,10 @@ export const AuthProvider = ({ children }) => {
     user: null,
   });
 
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
-    <AuthContext.Provider value={{ auth, setAuth }}>
+    <AuthContext.Provider value={{ auth, setAuth, isLoading, setIsLoading }}>
       {children}
     </AuthContext.Provider>
   );

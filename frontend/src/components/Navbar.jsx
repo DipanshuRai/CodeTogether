@@ -35,7 +35,7 @@ const Navbar = () => {
       <div className="navbar-container">
         <a href="/" className="navbar-logo">
           <FaCode className="navbar-icon" />
-          SynCode
+          CodeTogether
         </a>
 
         <div className="menu-icon" onClick={toggleMenu}>
