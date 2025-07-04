@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import { executeCode } from "../api/executeCode.js";
 import LanguageSelector from "./LanguageSelector";
 import {
@@ -8,9 +9,12 @@ import {
   FaMicrophoneSlash,
   FaVideo,
   FaVideoSlash,
+  FaCode,
+  FaCopy,
 } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import "./EditorHeader.css";
+import toast from "react-hot-toast";
 
 const EditorHeader = ({
   language,
@@ -29,6 +33,7 @@ const EditorHeader = ({
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
   const toggleAudio = () => {
+    if (!myStream) return;
     myStream
       .getAudioTracks()
       .forEach((track) => (track.enabled = !isAudioEnabled));
@@ -36,6 +41,7 @@ const EditorHeader = ({
   };
 
   const toggleVideo = () => {
+    if (!myStream) return;
     myStream
       .getVideoTracks()
       .forEach((track) => (track.enabled = !isVideoEnabled));
@@ -44,7 +50,7 @@ const EditorHeader = ({
 
   const runCode = async () => {
     const sourceCode = editorRef.current.getValue();
-    
+
     if (!sourceCode) return;
     try {
       setIsLoading(true);
@@ -60,9 +66,25 @@ const EditorHeader = ({
     }
   };
 
+  const copyRoomID = async () => {
+    try {
+      await navigator.clipboard.writeText(roomId);
+      toast.success("Room ID copied");
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+      toast.error("Could not copy Room ID");
+    }
+  };
+
   return (
-    <div className="editor-header">
-      <LanguageSelector language={language} onSelect={onSelect} />
+    <header className="editor-header">
+      <NavLink to="/" className="navbar-logo">
+        <FaCode className="navbar-icon" />
+        <h1>
+          Code<span className="title2">Together</span>
+        </h1>
+      </NavLink>
+      <LanguageSelector selectedLanguage={language} onSelect={onSelect} />
       <button className="run-button" onClick={runCode} disabled={isLoading}>
         <FaPlay />
         <span>{isLoading ? "Running..." : "Run Code"}</span>
@@ -71,23 +93,36 @@ const EditorHeader = ({
       {roomId !== "solo" && (
         <div className="media-controls">
           <button
+            className="control-btn"
+            onClick={copyRoomID}
+            title="Copy Room ID"
+          >
+            <FaCopy />
+          </button>
+          <button
             onClick={toggleAudio}
             className={`control-btn ${!isAudioEnabled ? "disabled" : ""}`}
+            title={isAudioEnabled ? "Mute" : "Unmute"}
           >
             {isAudioEnabled ? <FaMicrophone /> : <FaMicrophoneSlash />}
           </button>
           <button
             onClick={toggleVideo}
             className={`control-btn ${!isVideoEnabled ? "disabled" : ""}`}
+            title={isVideoEnabled ? "Turn off camera" : "Turn on camera"}
           >
             {isVideoEnabled ? <FaVideo /> : <FaVideoSlash />}
           </button>
-          <button className={`control-btn`} onClick={onToggleUsers}>
+          <button
+            className={`control-btn`}
+            onClick={onToggleUsers}
+            title="Toggle Users Panel"
+          >
             <FaUsers />
           </button>
         </div>
       )}
-    </div>
+    </header>
   );
 };
 

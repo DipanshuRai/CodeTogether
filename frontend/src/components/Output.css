@@ -1,28 +1,15 @@
-.output-container {
+.output-panel {
   display: flex;
   flex-direction: column;
-  height: 87%;
-  padding: 1rem;
+  height: 100%;
   background-color: #1e1e1e;
   color: #d4d4d4;
   box-sizing: border-box;
+  padding: 0.5rem;
+  gap: 0.5rem;
 }
 
-.output-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  flex-shrink: 0;
-}
-
-.output-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-.output-area {
+.output-body {
   flex-grow: 1;
   background: #252526;
   border-radius: 5px;
@@ -31,66 +18,45 @@
   overflow: auto;
   font-family: 'Fira Code', 'Courier New', monospace;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .output-placeholder {
   color: #858585;
   font-style: italic;
-  margin: auto;
 }
 
 .loader {
   width: 32px;
   height: 32px;
   border: 4px solid #4a4a4a;
-  border-bottom-color: #0e639c;
+  border-bottom-color: #6a17c4;
   border-radius: 50%;
-  display: inline-block;
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
-  margin: auto;
-}
-
-.output-content {
-  width: 100%;
-}
-
-.output-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: bold;
-  padding-bottom: 0.75rem;
-  margin-bottom: 0.75rem;
-  border-bottom: 1px solid #333;
-}
-
-.status-icon {
-  font-size: 1.2rem;
-}
-
-.status-icon.success {
-  color: #38a169; /* Green */
-}
-.output-content.success .output-status {
-  color: #38a169;
-}
-
-.status-icon.error {
-  color: #e53e3e;
-}
-.output-content.error .output-status {
-  color: #e53e3e;
-}
-
-.output-content pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
 }
 
 @keyframes rotation {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.output-body pre {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  align-self: flex-start;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.output-error {
+  color: #ff8b8b;
 }

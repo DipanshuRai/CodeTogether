@@ -1,9 +1,9 @@
 import { Fragment } from "react";
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { VscOutput } from "react-icons/vsc";
 import "./Output.css";
 
-const Output = ({ isError, output, isLoading }) => {
-  const renderOutput = () => {
+const Output = ({ output, isLoading, isError }) => {
+  const renderContent = () => {
     if (isLoading) {
       return <div className="loader"></div>;
     }
@@ -17,35 +17,24 @@ const Output = ({ isError, output, isLoading }) => {
     }
 
     return (
-      <div className={`output-content ${isError ? "error" : "success"}`}>
-        <div className="output-status">
-          {isError ? (
-            <>
-              <FaTimesCircle className="status-icon error" />
-              <span>Error</span>
-            </>
-          ) : (
-            <>
-              <FaCheckCircle className="status-icon success" />
-              <span>Success</span>
-            </>
-          )}
-        </div>
-        <pre>
-          {output.map((line, index) => (
-            <Fragment key={index}>
-              {line}
-              {index !== output.length - 1 && <br />}
-            </Fragment>
-          ))}
-        </pre>
-      </div>
+      <pre className={isError ? 'output-error' : ''}>
+        {output.map((line, index) => (
+          <Fragment key={index}>
+            {line}
+            {index !== output.length - 1 && <br />}
+          </Fragment>
+        ))}
+      </pre>
     );
   };
 
   return (
-    <div className="output-container">
-      <div className="output-area">{renderOutput()}</div>
+    <div className="output-panel">
+      <div className="panel-header">
+        <VscOutput className="header-icon" />
+        <span>Output (stdout)</span>
+      </div>
+      <div className="output-body">{renderContent()}</div>
     </div>
   );
 };

@@ -1,71 +1,26 @@
-.main-container {
+.code-editor-layout {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
+  background-color: #1e1e1e;
   overflow: hidden;
 }
 
-/* .sidebar {
-  width: 5rem;
-  background-color: #15151595;
-  border-right: 1px solid rgba(63, 63, 63, 0.774);
-  flex-shrink: 0;
-  color: #888;
-  display: flex;
-  align-items:flex-end;
-  justify-content: center;
-} */
-
-.user-frame{
-  margin: 1rem;
-  padding: 0.9rem;
-  background-color: #f3adad;
-  color: #333;
-  font-weight: 600;
-  font-size: 1.1rem;
-  border-radius: 50%;
-  border: none;
-  transition: all 0.3s ease-in-out;
-}
-
-.user-frame:hover{
-  background-color: #f79090;
-  cursor: pointer;
-}
-
-.editor-container {
-  height: 100%;
+.main-content {
   flex: 1;
-  min-width: 0;
+  min-height: 0; /* Important for flex children to not overflow */
 }
 
-.sash {
-  background-color: #333 !important;
-}
-.sash-hover {
-  background-color: #555 !important;
-}
-
-.editor-pane,
-.output-pane {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; 
-}
-
-.editor {
-  flex-grow: 1;
-}
-
-.output-pane {
-  background-color: #1e1e1e;
+/* Ensure Allotment fills the main content area */
+.main-content .allotment-container {
+  height: 100% !important;
 }
 
 .users-panel {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%; /* FIX: Fill the allotment pane */
   background-color: #1a1a1c;
   padding: 1rem;
   box-sizing: border-box;
@@ -77,10 +32,6 @@
   position: relative;
 }
 
-.my-video-container:hover .media-controls {
-  opacity: 1;
-}
-
 .remote-videos-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -88,15 +39,12 @@
   flex-grow: 1;
 }
 
+/* Sash styling for Allotment */
 .sash {
   background-color: #333 !important;
-  --sash-size: 6px !important;
+  --sash-size: 4px !important;
 }
 
 .sash:hover {
-  background-color: #0e639c !important;
-}
-
-.editor-container .editor {
-  height: 100% !important;
+  background-color: #6a17c4 !important;
 }

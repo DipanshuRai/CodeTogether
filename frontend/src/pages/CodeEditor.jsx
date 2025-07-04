@@ -29,7 +29,7 @@ const CodeEditor = () => {
 
   // Editor State
   const editorRef = useRef();
-  const [language, setLanguage] = useState("javascript");
+  const [language, setLanguage] = useState("cpp");
   const [value, setValue] = useState(CODE_SNIPPETS[language]);
   const [output, setOutput] = useState(null);
   const [isError, setIsError] = useState(false);
@@ -254,53 +254,45 @@ const CodeEditor = () => {
   };
 
   return (
-    <div className="main-container">
-      <div className="editor-container">
-        <EditorHeader
-          language={language}
-          onSelect={onSelect}
-          editorRef={editorRef}
-          setIsError={setIsError}
-          setOutput={setOutput}
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          onToggleUsers={() => setIsUsersPanelVisible((prev) => !prev)}
-          myStream={myStream}
-          input={input}
-        />
+    <div className="code-editor-layout">
+      <EditorHeader
+        language={language}
+        onSelect={onSelect}
+        editorRef={editorRef}
+        setIsError={setIsError}
+        setOutput={setOutput}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        onToggleUsers={() => setIsUsersPanelVisible((prev) => !prev)}
+        myStream={myStream}
+        input={input}
+      />
+      <main className="main-content">
         <Allotment>
-          <Allotment.Pane preferredSize={650} minSize={300}>
-            <div className="editor-pane">
-              <Editor
-                className="editor"
-                height="92vh" // Editor header is 8vh
-                theme="vs-dark"
-                language={language}
-                defaultValue={CODE_SNIPPETS[language]}
-                value={value}
-                onMount={onMount}
-                onChange={handleCodeChange}
-              />
-            </div>
+          <Allotment.Pane preferredSize={850} minSize={300}>
+            <Editor
+              height="100%"
+              theme="vs-dark"
+              language={language}
+              defaultValue={CODE_SNIPPETS[language]}
+              value={value}
+              onMount={onMount}
+              onChange={handleCodeChange}
+              options={{
+                padding: {
+                  top: 10,
+                },
+                formatOnPaste: true,
+              }}
+            />
           </Allotment.Pane>
           <Allotment.Pane minSize={300}>
-            <Allotment vertical defaultSizes={[400, 400]}>
-              <Allotment.Pane>
-                <div className="output-pane">
-                  <Input
-                    input={input}
-                    setInput={setInput}
-                  />
-                </div>
+            <Allotment vertical>
+              <Allotment.Pane minSize={200}>
+                <Input input={input} setInput={setInput} />
               </Allotment.Pane>
-              <Allotment.Pane>
-                <div className="output-pane">
-                  <Output
-                    isError={isError}
-                    output={output}
-                    isLoading={isLoading}
-                  />
-                </div>
+              <Allotment.Pane preferredSize={450} minSize={200}>
+                <Output output={output} isLoading={isLoading} isError={isError} />
               </Allotment.Pane>
             </Allotment>
           </Allotment.Pane>
@@ -316,7 +308,6 @@ const CodeEditor = () => {
                     />
                   )}
                 </div>
-
                 <div className="remote-videos-grid">
                   {users.map((user) => (
                     <div key={user.id}>
@@ -332,7 +323,7 @@ const CodeEditor = () => {
             </Allotment.Pane>
           )}
         </Allotment>
-      </div>
+      </main>
     </div>
   );
 };

@@ -58,6 +58,20 @@ const Home = () => {
     });
   };
 
+  const handleAutoGenerateRoomID = () => {
+    const generateIdSegment = (length = 3) => {
+      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+      let id = "";
+      for (let i = 0; i < length; i++) {
+        id += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return id;
+    };
+
+    const randomRoomId=[generateIdSegment(), generateIdSegment(), generateIdSegment()].join('-');
+    setRoomId(randomRoomId);
+  };
+
   return (
     <>
       <Navbar />
@@ -78,6 +92,12 @@ const Home = () => {
                   onChange={(e) => setRoomId(e.target.value)}
                   required
                 />
+                {modalType === "create" && <div
+                  className="auto-generate"
+                  onClick={() => handleAutoGenerateRoomID()}
+                >
+                  Generate
+                </div>}
                 <button
                   className="hero-cta-button modal-submit-button"
                   type="submit"
@@ -128,7 +148,7 @@ const Home = () => {
 
         <section id="features" className="features-section">
           <div className="container">
-            <h2 className="section-title">Why Choose SynCode?</h2>
+            <h2 className="section-title">Why Choose CodeTogether?</h2>
             <div className="features-grid">
               <div className="feature-card">
                 <FaUsers className="feature-icon" />

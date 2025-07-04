@@ -16,7 +16,7 @@ const VideoPlayer = ({ stream, name, isMuted }) => {
         ref={videoRef}
         autoPlay
         playsInline
-        // muted={isMuted}
+        muted={isMuted}
         className="video-player"
       />
       <div className="video-player-name">{name}</div>

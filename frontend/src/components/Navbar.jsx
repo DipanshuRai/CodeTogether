@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "./Navbar.css";
 import { FaCode, FaBars, FaTimes } from "react-icons/fa";
 import { useAuth } from "../context/AuthProvider";
 import { axiosPrivate } from "../api/axios";
 import toast from "react-hot-toast";
+import "./Navbar.css";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,11 +51,6 @@ const Navbar = () => {
           <li className="nav-item">
             <a href="#how-it-works" className="nav-links" onClick={toggleMenu}>
               How it Works
-            </a>
-          </li>
-          <li className="nav-item">
-            <a href="/about" className="nav-links" onClick={toggleMenu}>
-              About
             </a>
           </li>
 

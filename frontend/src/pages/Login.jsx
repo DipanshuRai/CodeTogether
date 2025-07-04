@@ -151,7 +151,9 @@ const Login = () => {
         <button type="submit" className="signup-btn" disabled={isLoading}>
           {isLoading ? <Loader2 className="input-icon spin" /> : "Login"}
         </button>
-        <div className="separator">or</div>
+        <div className="separator">
+          <div className="line"></div>or<div className="line"></div>
+        </div>
         <div className="google-signup">
           <button type="button" onClick={() => googleLogin()} className="google-signup-btn" disabled={isLoading || isGoogleLoading}>
             {isGoogleLoading ? <Loader2 className="input-icon spin" /> : <FcGoogle className="google-logo" />}

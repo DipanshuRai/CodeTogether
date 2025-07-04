@@ -71,7 +71,7 @@ const Signup = () => {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         }
       );
-      
+
       const { data } = await axiosPrivate.post("/api/auth/google-login", {
         email: googleUser.data.email,
         fullname: googleUser.data.name,
@@ -169,15 +169,30 @@ const Signup = () => {
           </div>
         </div>
 
-        <button type="submit" className="signup-btn" disabled={isLoading || isGoogleLoading}>
+        <button
+          type="submit"
+          className="signup-btn"
+          disabled={isLoading || isGoogleLoading}
+        >
           {isLoading ? <Loader2 className="input-icon spin" /> : "Signup"}
         </button>
 
-        <div className="separator">or</div>
+        <div className="separator">
+          <div className="line"></div>or<div className="line"></div>
+        </div>
 
-        <div className="google-signup">
-          <button type="button" onClick={() => googleLogin()} className="google-signup-btn" disabled={isLoading || isGoogleLoading}>
-            {isGoogleLoading ? <Loader2 className="input-icon spin" /> : <FcGoogle className="google-logo" />}
+        <div
+          type="button"
+          className="google-signup"
+          onClick={() => googleLogin()}
+          disabled={isLoading || isGoogleLoading}
+        >
+          <button className="google-signup-btn">
+            {isGoogleLoading ? (
+              <Loader2 className="input-icon spin" />
+            ) : (
+              <FcGoogle className="google-logo" />
+            )}
             Signup with Google
           </button>
         </div>

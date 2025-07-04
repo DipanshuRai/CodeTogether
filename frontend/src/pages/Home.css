@@ -69,6 +69,16 @@
   width: 100%;
 }
 
+.auto-generate{
+  background-color: #a0a0a0b4;
+  border-radius: 3px;
+  padding: 3px 5px;
+  position: absolute;
+  right: 40px;
+  top: 91px;
+  cursor: pointer;
+}
+
 .modal-input:focus {
   outline: none;
   border-color: var(--primary-color);
@@ -105,6 +115,7 @@
 .hero-title {
   font-size: 3.5rem;
   margin-bottom: 1rem;
+  color: #fff;
 }
 
 .hero-subtitle {
