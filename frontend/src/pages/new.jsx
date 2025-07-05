@@ -290,23 +290,14 @@ const CodeEditor = () => {
       <main className="main-content">
         <Allotment>
           <Allotment.Pane preferredSize={850} minSize={300}>
-            <Editor
-              height="100%"
-              theme="vs-dark"
-              language={language}
-              defaultValue={CODE_SNIPPETS[language]}
-              value={value}
-              onMount={onMount}
-              onChange={handleCodeChange}
-              options={{ padding: { top: 10 }, formatOnPaste: true }}
-            />
+            <Editor /* ...props... */ />
           </Allotment.Pane>
           <Allotment.Pane minSize={300}>
             <Allotment vertical>
               <Allotment.Pane minSize={200}>
                 <Input input={input} setInput={setInput} />
               </Allotment.Pane>
-              <Allotment.Pane minSize={200}>
+              <Allotment.Pane preferredSize={450} minSize={200}>
                 <Output output={output} isLoading={isLoading} isError={isError} />
               </Allotment.Pane>
             </Allotment>
@@ -329,6 +320,8 @@ const CodeEditor = () => {
                         stream={remoteStreams[user.id]}
                         name={user.name}
                         isMuted={false}
+                        // remote streams don't need the isVideoEnabled prop
+                        // as their visibility is controlled by the track itself
                       />
                     </div>
                   ))}

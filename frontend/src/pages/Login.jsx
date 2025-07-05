@@ -46,6 +46,8 @@ const Login = () => {
 
     try {
       const response = await axiosPrivate.post("/api/auth/login", formData);
+      console.log(response.data);
+      
       const { accessToken, user } = response.data;
       setAuth({ accessToken, user });
       toast.success(response.data.message);

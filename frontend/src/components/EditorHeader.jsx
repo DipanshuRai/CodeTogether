@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { executeCode } from "../api/executeCode.js";
 import LanguageSelector from "./LanguageSelector";
@@ -25,28 +24,14 @@ const EditorHeader = ({
   isLoading,
   setIsLoading,
   onToggleUsers,
-  myStream,
   input,
+  // Receive controls from parent
+  isAudioEnabled,
+  isVideoEnabled,
+  toggleAudio,
+  toggleVideo,
 }) => {
   const { roomId } = useParams();
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-
-  const toggleAudio = () => {
-    if (!myStream) return;
-    myStream
-      .getAudioTracks()
-      .forEach((track) => (track.enabled = !isAudioEnabled));
-    setIsAudioEnabled(!isAudioEnabled);
-  };
-
-  const toggleVideo = () => {
-    if (!myStream) return;
-    myStream
-      .getVideoTracks()
-      .forEach((track) => (track.enabled = !isVideoEnabled));
-    setIsVideoEnabled(!isVideoEnabled);
-  };
 
   const runCode = async () => {
     const sourceCode = editorRef.current.getValue();
@@ -80,9 +65,8 @@ const EditorHeader = ({
     <header className="editor-header">
       <NavLink to="/" className="navbar-logo">
         <FaCode className="navbar-icon" />
-        <h1>
-          Code<span className="title2">Together</span>
-        </h1>
+        <h1>Code</h1>
+        <span className="title2">Together</span>
       </NavLink>
       <LanguageSelector selectedLanguage={language} onSelect={onSelect} />
       <button className="run-button" onClick={runCode} disabled={isLoading}>
@@ -92,11 +76,7 @@ const EditorHeader = ({
 
       {roomId !== "solo" && (
         <div className="media-controls">
-          <button
-            className="control-btn"
-            onClick={copyRoomID}
-            title="Copy Room ID"
-          >
+          <button className="control-btn" onClick={copyRoomID} title="Copy Room ID">
             <FaCopy />
           </button>
           <button
@@ -113,11 +93,7 @@ const EditorHeader = ({
           >
             {isVideoEnabled ? <FaVideo /> : <FaVideoSlash />}
           </button>
-          <button
-            className={`control-btn`}
-            onClick={onToggleUsers}
-            title="Toggle Users Panel"
-          >
+          <button className={`control-btn`} onClick={onToggleUsers} title="Toggle Users Panel">
             <FaUsers />
           </button>
         </div>

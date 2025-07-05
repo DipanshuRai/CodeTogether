@@ -62,7 +62,7 @@
 }
 
 .media-controls {
-  margin-left: auto; /* Push all controls to the far right */
+  margin-left: auto;
   display: flex;
   gap: 10px;
 }

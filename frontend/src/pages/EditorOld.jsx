@@ -38,11 +38,13 @@ const CodeEditor = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
 
+  // Media State
   // --- FIX 1: Simplify Media State ---
   // myStream will hold the complete, ready-to-use MediaStream object.
+  const myStreamRef = useRef(new MediaStream());
   const [myStream, setMyStream] = useState(null);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(false);
   
   // WebRTC State
   const peerConnections = useRef({}); // { socketId: RTCPeerConnection }
@@ -50,14 +52,69 @@ const CodeEditor = () => {
   const [users, setUsers] = useState([]); // { id: string, name: string }[]
   const [isUsersPanelVisible, setIsUsersPanelVisible] = useState(true);
 
-
-  // --- FIX 2: Create a stable `createPeerConnection` that takes the stream as an argument ---
-  // This makes the dependency explicit and the function more predictable.
-  const createPeerConnection = useCallback((peerSocketId, stream) => {
-      if (!stream) {
-        console.error("Cannot create peer connection without a local stream.");
-        return null;
+  // Helper to update all peer connections with a new track
+  const replaceTrackInPeers = useCallback(async (track, kind) => {
+    for (const pc of Object.values(peerConnections.current)) {
+      const sender = pc.getSenders().find((s) => s.track?.kind === kind);
+      if (sender) {
+        await sender.replaceTrack(track);
       }
+    }
+  }, []);
+
+  const updateMedia = useCallback(async (requestedVideo, requestedAudio) => {
+      // VIDEO
+      if (requestedVideo && !isVideoEnabled) {
+          try {
+              const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+              const videoTrack = videoStream.getVideoTracks()[0];
+              myStreamRef.current.addTrack(videoTrack);
+              await replaceTrackInPeers(videoTrack, 'video');
+              setIsVideoEnabled(true);
+          } catch (err) {
+              console.error("Failed to get video stream:", err);
+              toast.error("Could not access camera. Please grant permission.");
+              setIsVideoEnabled(false); // Revert state on failure
+          }
+      } else if (!requestedVideo && isVideoEnabled) {
+          myStreamRef.current.getVideoTracks().forEach(track => {
+              track.stop();
+              myStreamRef.current.removeTrack(track);
+          });
+          await replaceTrackInPeers(null, 'video');
+          setIsVideoEnabled(false);
+      }
+
+      // AUDIO
+      if (requestedAudio && !isAudioEnabled) {
+          try {
+              const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              const audioTrack = audioStream.getAudioTracks()[0];
+              myStreamRef.current.addTrack(audioTrack);
+              await replaceTrackInPeers(audioTrack, 'audio');
+              setIsAudioEnabled(true);
+          } catch (err) {
+              console.error("Failed to get audio stream:", err);
+              toast.error("Could not access microphone. Please grant permission.");
+              setIsAudioEnabled(false); // Revert state on failure
+          }
+      } else if (!requestedAudio && isAudioEnabled) {
+          myStreamRef.current.getAudioTracks().forEach(track => {
+              track.stop();
+              myStreamRef.current.removeTrack(track);
+          });
+          await replaceTrackInPeers(null, 'audio');
+          setIsAudioEnabled(false);
+      }
+      
+      setMyStream(new MediaStream(myStreamRef.current.getTracks()));
+  }, [isVideoEnabled, isAudioEnabled, replaceTrackInPeers]);
+
+
+  const toggleAudio = () => updateMedia(isVideoEnabled, !isAudioEnabled);
+  const toggleVideo = () => updateMedia(!isVideoEnabled, isAudioEnabled);
+
+  const createPeerConnection = useCallback((peerSocketId) => {
       const pc = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
 
       pc.onicecandidate = (event) => {
@@ -67,85 +124,59 @@ const CodeEditor = () => {
       };
 
       pc.ontrack = (event) => {
-        console.log(`Received track from ${peerSocketId}`, event.track);
         setRemoteStreams((prev) => ({ ...prev, [peerSocketId]: event.streams[0] }));
       };
 
-      // Add tracks from the local stream to the connection
-      stream.getTracks().forEach((track) => {
-        pc.addTrack(track, stream);
+      myStreamRef.current.getTracks().forEach((track) => {
+        pc.addTrack(track, myStreamRef.current);
       });
 
       peerConnections.current[peerSocketId] = pc;
       return pc;
-    }, [socket]
+    },[socket]
   );
 
-  const initiatePeerConnectionAndOffer = useCallback(async (peerSocketId, stream) => {
+  // --- FIX 1: Create a reusable function to initiate a connection ---
+  // This abstracts the logic for creating and sending a WebRTC offer.
+  const initiatePeerConnectionAndOffer = useCallback(async (peerSocketId) => {
+    // Avoid creating duplicate connections
     if (peerConnections.current[peerSocketId]) {
-      console.warn(`Connection to ${peerSocketId} already exists.`);
+      console.warn(`Connection to ${peerSocketId} already exists or is in progress.`);
       return;
     }
     console.log(`Initiating WebRTC connection to new peer: ${peerSocketId}`);
-    
-    // Pass the stream to the creation function
-    const pc = createPeerConnection(peerSocketId, stream);
-    if (!pc) return;
-
+    const pc = createPeerConnection(peerSocketId);
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     socket.emit("webrtc:offer", { to: peerSocketId, offer });
   }, [createPeerConnection, socket]);
-
-  // --- FIX 3: Dedicated `useEffect` for Media Acquisition ---
-  // This hook runs ONCE on mount to get the media. It's the first step.
+  
+  // Initialize media on mount
   useEffect(() => {
     if (roomId === "solo") return;
+    updateMedia(true, true); 
 
-    const initMedia = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        setMyStream(stream);
-      } catch (err) {
-        console.error("Failed to get media stream:", err);
-        toast.error("Camera/Mic access denied. Video chat disabled.");
-        // Still allow joining the room without media
-        setIsVideoEnabled(false);
-        setIsAudioEnabled(false);
-        setMyStream(new MediaStream()); // Create an empty stream to allow logic to proceed
-      }
-    };
-    initMedia();
-    
     return () => {
-      // Cleanup stream when component unmounts
-      myStream?.getTracks().forEach((track) => track.stop());
+      myStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId]);
+  }, [roomId]); 
 
-
-  // --- FIX 4: Main `useEffect` now DEPENDS on `myStream` ---
-  // This entire block of code will NOT run until `myStream` state is set, solving the race condition.
+  // Main socket and WebRTC event handling effect
   useEffect(() => {
-    // Wait until both the socket and the media stream are ready
-    if (!socket || !myStream || roomId === "solo") return;
+    if (!socket || roomId === "solo") return;
 
-    // This handler is for EXISTING users. It just shows a toast.
-    // The new user is responsible for initiating the connection.
-    const handleNewUser = ({ name }) => {
+    const handleNewUser = async ({ socketId, name }) => {
+      if (peerConnections.current[socketId]) return;
       toast(`${name} joined the room.`);
+      initiatePeerConnectionAndOffer(socketId);
     };
-    
-    // This handler is for EXISTING users who receive an offer from a NEW user.
+
+    // --- FIX 1: REMOVED `users` DEPENDENCY ---
+    // The console.log is simplified to avoid the dependency.
     const handleOffer = async ({ from, offer }) => {
       console.log(`Received offer from ${from}. Creating answer...`);
-      const pc = createPeerConnection(from, myStream); // Pass the local stream
-      if (!pc) return;
-
+      const pc = createPeerConnection(from);
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
@@ -154,17 +185,12 @@ const CodeEditor = () => {
 
     const handleAnswer = async ({ from, answer }) => {
       const pc = peerConnections.current[from];
-      if (pc) {
-        await pc.setRemoteDescription(new RTCSessionDescription(answer));
-        console.log(`Connection established with ${from}`);
-      }
+      if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
     };
 
     const handleIceCandidate = async ({ from, candidate }) => {
       const pc = peerConnections.current[from];
-      if (pc && candidate) {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      }
+      if (pc && candidate) await pc.addIceCandidate(new RTCIceCandidate(candidate));
     };
 
     const handleUserLeft = ({ socketId, name }) => {
@@ -191,7 +217,7 @@ const CodeEditor = () => {
 
     const handleNewAdmin = () => toast("You are the new admin!");
 
-    // Setup all socket listeners
+    // Set up listeners
     socket.on("user-joined", handleNewUser);
     socket.on("webrtc:offer", handleOffer);
     socket.on("webrtc:answer", handleAnswer);
@@ -201,15 +227,20 @@ const CodeEditor = () => {
     socket.on("remote-code-change", handleRemoteCodeChange);
     socket.on("new-admin", handleNewAdmin);
     
-    // Now that listeners are set up AND we have a media stream, check in with the server.
+    // Initial check to ensure user belongs in the room
     socket.emit("check-user", roomId, (response) => {
       if (response.success && response.users) {
+        // Successfully verified. Now populate the user list from the response.
         handleUserListUpdate(response.users);
+
+        // --- FIX 3: Proactively connect to all existing users ---
+        // Get the list of users *other than myself*
         const otherUsers = response.users.filter(u => u.id !== socket.id);
-        console.log('Media is ready. Initiating connections to existing users:', otherUsers);
-        // NEW user initiates connections to every EXISTING user
+        console.log('Initiating connections to existing users:', otherUsers);
+        
+        // Loop through them and initiate a connection to each one
         otherUsers.forEach(user => {
-            initiatePeerConnectionAndOffer(user.id, myStream);
+            initiatePeerConnectionAndOffer(user.id);
         });
       } else if (!response.success) {
         toast.error(response.message || "Access denied. Please rejoin.");
@@ -218,7 +249,6 @@ const CodeEditor = () => {
     });
 
     return () => {
-      // Clean up all listeners
       socket.off("user-joined", handleNewUser);
       socket.off("webrtc:offer", handleOffer);
       socket.off("webrtc:answer", handleAnswer);
@@ -228,30 +258,15 @@ const CodeEditor = () => {
       socket.off("remote-code-change", handleRemoteCodeChange);
       socket.off("new-admin", handleNewAdmin);
 
-      // Clean up all peer connections
+      // Clean up connections and leave room
       Object.values(peerConnections.current).forEach((pc) => pc.close());
-      peerConnections.current = {};
       if (roomId !== "solo") {
         socket.emit("leave-room");
       }
     };
-  }, [socket, myStream, roomId, navigate, createPeerConnection, initiatePeerConnectionAndOffer]);
-
-  // --- FIX 5: Simplified Toggle Functions ---
-  // This is more efficient than recreating streams.
-  const toggleAudio = () => {
-    if (myStream) {
-      myStream.getAudioTracks().forEach(track => track.enabled = !isAudioEnabled);
-      setIsAudioEnabled(!isAudioEnabled);
-    }
-  };
-
-  const toggleVideo = () => {
-    if (myStream) {
-      myStream.getVideoTracks().forEach(track => track.enabled = !isVideoEnabled);
-      setIsVideoEnabled(!isVideoEnabled);
-    }
-  };
+    // --- FIX 2: SIMPLIFIED DEPENDENCY ARRAY ---
+    // The handlers are now stable and don't need to be in the array.
+  }, [socket, roomId, navigate, createPeerConnection, initiatePeerConnectionAndOffer]);
 
   const onSelect = (language) => {
     const snippet = CODE_SNIPPETS[language];
@@ -270,6 +285,7 @@ const CodeEditor = () => {
     editor.focus();
   };
 
+  // (The rest of the component's return statement is unchanged)
   return (
     <div className="code-editor-layout">
       <EditorHeader
@@ -306,7 +322,7 @@ const CodeEditor = () => {
               <Allotment.Pane minSize={200}>
                 <Input input={input} setInput={setInput} />
               </Allotment.Pane>
-              <Allotment.Pane minSize={200}>
+              <Allotment.Pane preferredSize={450} minSize={200}>
                 <Output output={output} isLoading={isLoading} isError={isError} />
               </Allotment.Pane>
             </Allotment>

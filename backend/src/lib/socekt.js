@@ -1,3 +1,5 @@
+// server.js
+
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
@@ -24,45 +26,48 @@ const io = new Server(server, {
   }
 });
 
-// Rooms: { [roomId]: { adminId: socket.id, Map<socket.id, username> } }
+// Rooms: { [roomId]: { adminId: socket.id, users: Map<socket.id, username> } }
 const rooms = {};
 
 // Sockets: Map<socket.id, roomId>
 const socketToRoomMap = new Map();
 
 const handleLeaveRoom = (socket) => {
-  const roomId = socket.roomId;
+  const roomId = socketToRoomMap.get(socket.id);
+  
   if (!roomId || !rooms[roomId]) {
     return;
   }
 
   const room = rooms[roomId];
-  const username = room.users.get(socket.id)
+  const username = room.users.get(socket.id);
 
+  // Clean up
   room.users.delete(socket.id);
   socketToRoomMap.delete(socket.id);
-  console.log(`User ${socket.id} removed from room ${roomId}. Users left: ${room.users.size}`);
-
+  socket.leave(roomId); // Leave the socket.io room
+  console.log(`User ${username}(${socket.id}) left room ${roomId}. Users left: ${room.users.size}`);
+  
+  // Notify others
   if(username){
     socket.to(roomId).emit("user-left", { socketId: socket.id, name: username });
   }
 
+  // Handle room state after user leaves
   if (room.users.size === 0) {
     console.log(`Room ${roomId} is empty, deleting it.`);
     delete rooms[roomId];
-    return;
-  }
-  else{
+  } else {
+    // If the admin left, assign a new admin
     if (socket.id === room.adminId) {
       const newAdminId = room.users.keys().next().value; // Get the first user's ID
       room.adminId = newAdminId;
       console.log(`Admin disconnected. New admin for room ${roomId} is ${newAdminId}`);
       io.to(newAdminId).emit("new-admin");
     }
+    // Always send updated list to remaining users
     sendUpdatedUserList(roomId);
   }
-  
-  socket.leave(roomId);
 };
 
 const sendUpdatedUserList = (roomId) => {
@@ -84,7 +89,6 @@ io.on("connect", (socket) => {
     }
 
     socket.join(roomId);
-    socket.roomId = roomId;
     socketToRoomMap.set(socket.id, roomId);
 
     rooms[roomId] = {
@@ -92,7 +96,7 @@ io.on("connect", (socket) => {
       users: new Map([[socket.id, name]]),
     };
 
-    console.log(`User ${socket.id} created and joined room ${roomId}`);
+    console.log(`User ${name}(${socket.id}) created and joined room ${roomId}`);
     callback({ success: true, roomId, message: "Room created" });
 
     sendUpdatedUserList(roomId);
@@ -102,21 +106,35 @@ io.on("connect", (socket) => {
     if (!rooms[roomId]) {
       return callback({ success: false, message: "Room not found." });
     }
-
+    
+    const currentRoom = socketToRoomMap.get(socket.id);
+    if(currentRoom) {
+      handleLeaveRoom(socket);
+    }
+    
     socket.join(roomId);
     socketToRoomMap.set(socket.id, roomId);
     rooms[roomId].users.set(socket.id, name);
 
     console.log(`User ${name}(${socket.id}) joined room ${roomId}`);
+    
+    // Notify existing users that a new peer has joined.
     socket.to(roomId).emit("user-joined", { socketId: socket.id, name });
+
+    // The user list is no longer needed in the callback, as it's fetched later.
     callback({ success: true, roomId, message: "Room joined" });
 
+    // Notify everyone (including the new user) of the updated list.
+    // The new user will fetch this reliably with `check-user`, but this keeps existing users in sync.
     sendUpdatedUserList(roomId);
   });
 
+  // --- FIX [SERVER]: Modify check-user to send the user list ---
   socket.on("check-user", (roomId, callback) => {
     if (socketToRoomMap.get(socket.id) === roomId && rooms[roomId]?.users.has(socket.id)) {
-      callback({ success: true });
+      // User is authenticated for this room, so send them the current user list.
+      const userList = Array.from(rooms[roomId].users.entries()).map(([id, name]) => ({ id, name }));
+      callback({ success: true, users: userList });
     } else {
       callback({ success: false, message: "Access denied. You are not in this room." });
     }
@@ -134,8 +152,8 @@ io.on("connect", (socket) => {
     handleLeaveRoom(socket);
   });
 
-  socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
+  socket.on("disconnect", (reason) => {
+    console.log(`User disconnected: ${socket.id}, reason: ${reason}`);
     handleLeaveRoom(socket);
   });
 
