@@ -1,6 +1,9 @@
 import axios from "axios";
 import { LANGUAGE_VERSIONS } from "../constants.js";
 
+const MAX_CODE_LENGTH = 100000; // 100 KB limit for source code
+const MAX_STDIN_LENGTH = 10000;  // 10 KB limit for stdin
+
 export const executeCode = async (language, sourceCode, stdin="") => {
     
   try {
@@ -9,7 +12,14 @@ export const executeCode = async (language, sourceCode, stdin="") => {
     }
     
     if (!sourceCode || typeof sourceCode !== "string") {
-      throw new Error("Invalid source code");
+      throw new Error("Source code must be a non-empty string");
+    }
+
+    if (sourceCode.length > MAX_CODE_LENGTH) {
+        throw new Error(`Source code exceeds the maximum limit of ${MAX_CODE_LENGTH / 1000} KB.`);
+    }
+    if (stdin.length > MAX_STDIN_LENGTH) {
+        throw new Error(`Input (stdin) exceeds the maximum limit of ${MAX_STDIN_LENGTH / 1000} KB.`);
     }
     
     const payload = {
@@ -23,19 +33,22 @@ export const executeCode = async (language, sourceCode, stdin="") => {
       stdin: stdin,
     };
 
-    const response = await axios.post("https://emkc.org/api/v2/piston/execute", payload);
+    const response = await axios.post(import.meta.env.VITE_PISTON_API_URL, payload);
+
+    console.log(response);
 
     return response.data;
   } catch (error) {
     if (error.response) {
-      // The request was made and the server responded with a status code
-      throw new Error(`API Error: ${error.response.data.message || error.response.statusText}`);
+      const apiErrorMessage = error.response.data.message || error.response.statusText;
+      console.error("API Error:", apiErrorMessage);
+      throw new Error(`Execution Service Error: ${apiErrorMessage}`);
     } else if (error.request) {
-      // The request was made but no response was received
-      throw new Error("Network Error: Could not connect to the execution service");
+      console.error("Network Error:", error.request);
+      throw new Error("Network Error: Could not connect to the execution service.");
     } else {
-      // Something happened in setting up the request
-      throw new Error(`Execution Error: ${error.message}`);
+      console.error("Client-side Error:", error.message);
+      throw new Error(`${error.message}`);
     }
   }
 };

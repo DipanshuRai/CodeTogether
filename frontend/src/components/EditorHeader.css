@@ -8,6 +8,7 @@
   height: 60px; 
   box-sizing: border-box;
   flex-shrink: 0;
+  justify-content:space-between;
 }
 
 .navbar-logo {
@@ -31,10 +32,15 @@
   margin-bottom: -4px;
 }
 
-.title2 {
+.title-sec {
   color: #7f20e6;
   font-weight: 600;
   font-size: 1.8rem;
+}
+
+.mid-container{
+  display: flex;
+  gap: 1rem;
 }
 
 .run-button {
@@ -47,9 +53,37 @@
   padding: 9px 16px;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   transition: background-color 0.2s ease;
+}
+
+.board-btn{
+  height: 40px;
+  width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #7f20e6;
+  color: white;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.board-btn:hover{
+  background-color: #6a17c4;
 }
 
 .run-button:hover:not(:disabled) {
@@ -83,7 +117,7 @@
 }
 
 .control-btn:hover {
-  background-color: #5a5a5e;
+  background-color: #6a17c4;
 }
 
 .control-btn.disabled {

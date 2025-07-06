@@ -91,6 +91,7 @@
 .input-icon {
   color: var(--icon-color);
   width: 1.3rem;
+  margin-right: 5px;
 }
 
 .eye button {

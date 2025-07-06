@@ -42,6 +42,10 @@ const Home = () => {
       toast.error("Server error");
       return;
     }
+    if(roomId==="solo"){
+      toast.error("Reserved Room ID, enter different ID");
+      return;
+    }
     setIsSubmitting(true);
 
     const eventToEmit = modalType === "create" ? "create-room" : "join-room";

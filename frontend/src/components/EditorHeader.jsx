@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { executeCode } from "../api/executeCode.js";
 import LanguageSelector from "./LanguageSelector";
 import {
@@ -11,9 +11,13 @@ import {
   FaCode,
   FaCopy,
 } from "react-icons/fa";
+import { PiPencilCircleFill } from "react-icons/pi";
+import { VscOutput } from "react-icons/vsc";
+import { IoExit } from "react-icons/io5";
 import { useParams } from "react-router-dom";
-import "./EditorHeader.css";
 import toast from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
+import "./EditorHeader.css";
 
 const EditorHeader = ({
   language,
@@ -25,13 +29,15 @@ const EditorHeader = ({
   setIsLoading,
   onToggleUsers,
   input,
-  // Receive controls from parent
   isAudioEnabled,
   isVideoEnabled,
   toggleAudio,
   toggleVideo,
+  activeView,
+  onViewChange,
 }) => {
   const { roomId } = useParams();
+  const navigate = useNavigate();
 
   const runCode = async () => {
     const sourceCode = editorRef.current.getValue();
@@ -51,6 +57,11 @@ const EditorHeader = ({
     }
   };
 
+  const handleExitRoom = () => {
+    toast.success("Room left");
+    navigate("/");
+  };
+
   const copyRoomID = async () => {
     try {
       await navigator.clipboard.writeText(roomId);
@@ -66,35 +77,93 @@ const EditorHeader = ({
       <NavLink to="/" className="navbar-logo">
         <FaCode className="navbar-icon" />
         <h1>Code</h1>
-        <span className="title2">Together</span>
+        <span className="title-sec">Together</span>
       </NavLink>
-      <LanguageSelector selectedLanguage={language} onSelect={onSelect} />
-      <button className="run-button" onClick={runCode} disabled={isLoading}>
-        <FaPlay />
-        <span>{isLoading ? "Running..." : "Run Code"}</span>
+      <div className="mid-container">
+        <LanguageSelector selectedLanguage={language} onSelect={onSelect} />
+        <button className="run-button" onClick={runCode} disabled={isLoading}>
+          <FaPlay size={15} />
+          <span>{isLoading ? "Running..." : "Run Code"}</span>
+        </button>
+      </div>
+
+      <button
+        className="board-btn"
+        onClick={() => onViewChange(activeView === "io" ? "whiteboard" : "io")}
+        title={
+          activeView === "io"
+            ? "Switch to Whiteboard"
+            : "Switch to Input/Output"
+        }
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeView}
+            initial={{ opacity: 0, x: -15 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            transition={{ duration: 0.2 }}
+            className="btn-content"
+          >
+            {activeView === "io" ? (
+              <>
+                <PiPencilCircleFill size={20} />
+                <span>Whiteboard</span>
+              </>
+            ) : (
+              <>
+                <VscOutput size={17} />
+                <span>I/O</span>
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </button>
 
       {roomId !== "solo" && (
         <div className="media-controls">
-          <button className="control-btn" onClick={copyRoomID} title="Copy Room ID">
-            <FaCopy />
+          <button
+            className="control-btn"
+            onClick={handleExitRoom}
+            title="Leave Room"
+          >
+            <IoExit size={19} />
+          </button>
+          <button
+            className="control-btn"
+            onClick={copyRoomID}
+            title="Copy Room ID"
+          >
+            <FaCopy size={15} />
           </button>
           <button
             onClick={toggleAudio}
             className={`control-btn ${!isAudioEnabled ? "disabled" : ""}`}
             title={isAudioEnabled ? "Mute" : "Unmute"}
           >
-            {isAudioEnabled ? <FaMicrophone /> : <FaMicrophoneSlash />}
+            {isAudioEnabled ? (
+              <FaMicrophone size={16} />
+            ) : (
+              <FaMicrophoneSlash size={16} />
+            )}
           </button>
           <button
             onClick={toggleVideo}
             className={`control-btn ${!isVideoEnabled ? "disabled" : ""}`}
             title={isVideoEnabled ? "Turn off camera" : "Turn on camera"}
           >
-            {isVideoEnabled ? <FaVideo /> : <FaVideoSlash />}
+            {isVideoEnabled ? (
+              <FaVideo size={16} />
+            ) : (
+              <FaVideoSlash size={16} />
+            )}
           </button>
-          <button className={`control-btn`} onClick={onToggleUsers} title="Toggle Users Panel">
-            <FaUsers />
+          <button
+            className={`control-btn`}
+            onClick={onToggleUsers}
+            title="Toggle Users Panel"
+          >
+            <FaUsers size={19} />
           </button>
         </div>
       )}

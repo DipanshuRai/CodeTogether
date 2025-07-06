@@ -32,6 +32,10 @@ const rooms = {};
 // Sockets: Map<socket.id, roomId>
 const socketToRoomMap = new Map();
 
+// In-memory store for whiteboard states
+// { [roomId]: paths[] }
+const whiteboardStates = {};
+
 const handleLeaveRoom = (socket) => {
   const roomId = socketToRoomMap.get(socket.id);
   
@@ -56,6 +60,7 @@ const handleLeaveRoom = (socket) => {
   // Handle room state after user leaves
   if (room.users.size === 0) {
     console.log(`Room ${roomId} is empty, deleting it.`);
+    delete whiteboardStates[roomId];
     delete rooms[roomId];
   } else {
     // If the admin left, assign a new admin
@@ -144,6 +149,27 @@ io.on("connect", (socket) => {
     const roomId = socketToRoomMap.get(socket.id);
     if(roomId){
         socket.to(roomId).emit("remote-code-change", { language, code });
+    }
+  });
+
+  // A client sends the new, complete state of the whiteboard
+  socket.on("whiteboard:set-state", (data) => {
+    const roomId = socketToRoomMap.get(socket.id);
+    if (roomId) {
+      // Store this as the definitive state for the room
+      whiteboardStates[roomId] = data.paths;
+      // Broadcast this new state to everyone in the room
+      io.to(roomId).emit("whiteboard:state-update", { paths: data.paths });
+    }
+  });
+
+  // When a user's whiteboard mounts, they'll ask for the current state
+  socket.on("whiteboard:get-state", () => {
+    const roomId = socketToRoomMap.get(socket.id);
+    if (roomId && whiteboardStates[roomId]) {
+      // Send the stored state only to the user who requested it
+      // Use the same event name for consistency
+      socket.emit("whiteboard:state-update", { paths: whiteboardStates[roomId] });
     }
   });
 
