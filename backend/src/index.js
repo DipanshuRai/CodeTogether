@@ -1,14 +1,13 @@
 import express from 'express';
 import { app, server } from './lib/socekt.js';
 import { connectDB } from './lib/db.js';
-import cors from 'cors';
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser';
 import morgan from "morgan";
 import authRoutes from './routes/auth.route.js';
 
 dotenv.config();
-const PORT=process.env.PORT;
+const PORT=process.env.PORT || 5000;
 
 // app.use(cors({
 //     origin: ['http://localhost:5173', 'http://192.168.0.113:5173'],
