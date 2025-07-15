@@ -11,8 +11,7 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://192.168.0.113:5173'],
-    // origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173' || 'http://192.168.0.113:5173',
     credentials: true
 }));
 
