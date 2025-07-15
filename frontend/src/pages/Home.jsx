@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUsers, FaCodeBranch, FaTerminal } from "react-icons/fa";
+import {
+  FaUsers,
+  FaCodeBranch,
+  FaTerminal,
+  FaVideo,
+  FaDesktop,
+  FaChalkboardTeacher,
+} from "react-icons/fa";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { useAuth } from "../context/AuthProvider.jsx";
@@ -23,6 +30,7 @@ const Home = () => {
     if (isAuthenticated) {
       setModalType(type);
     } else {
+      toast.error("Please log in to continue");
       navigate("/login");
     }
   };
@@ -35,15 +43,15 @@ const Home = () => {
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (!roomId.trim()) {
-      toast.error("Provide Room ID");
+      toast.error("Room ID is required.");
+      return;
+    }
+    if (roomId === "solo") {
+      toast.error("'solo' is a reserved ID. Please choose another.");
       return;
     }
     if (!socket) {
-      toast.error("Server error");
-      return;
-    }
-    if(roomId==="solo"){
-      toast.error("Reserved Room ID, enter different ID");
+      toast.error("Connection error. Please try again later.");
       return;
     }
     setIsSubmitting(true);
@@ -63,17 +71,16 @@ const Home = () => {
   };
 
   const handleAutoGenerateRoomID = () => {
-    const generateIdSegment = (length = 3) => {
-      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-      let id = "";
-      for (let i = 0; i < length; i++) {
-        id += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return id;
+    const generateIdSegment = (length = 4) => {
+      return Math.random().toString(36).substring(2, 2 + length);
     };
-
-    const randomRoomId=[generateIdSegment(), generateIdSegment(), generateIdSegment()].join('-');
+    const randomRoomId = [
+      generateIdSegment(),
+      generateIdSegment(),
+      generateIdSegment(),
+    ].join("-");
     setRoomId(randomRoomId);
+    toast.success("Generated a new Room ID!");
   };
 
   return (
@@ -84,99 +91,123 @@ const Home = () => {
           <div className="modal-overlay" onClick={handleCloseModal}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <button className="modal-close-button" onClick={handleCloseModal}>
-                X
+                ×
               </button>
-              <h2>{modalType === "create" ? "Create Room" : "Join Room"}</h2>
+              <h2>{modalType === "create" ? "Create New Room" : "Join Room"}</h2>
               <form className="modal-form" onSubmit={handleFormSubmit}>
-                <input
-                  type="text"
-                  className="modal-input"
-                  placeholder="Enter Room ID"
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value)}
-                  required
-                />
-                {modalType === "create" && <div
-                  className="auto-generate"
-                  onClick={() => handleAutoGenerateRoomID()}
-                >
-                  Generate
-                </div>}
+                <div className="input-wrapper1">
+                  <input
+                    type="text"
+                    className="modal-input"
+                    placeholder="Enter Room ID"
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value)}
+                    required
+                  />
+                  {modalType === "create" && (
+                    <button
+                      type="button"
+                      className="auto-generate-button"
+                      onClick={handleAutoGenerateRoomID}
+                      title="Generate a random Room ID"
+                    >
+                      Generate
+                    </button>
+                  )}
+                </div>
                 <button
                   className="hero-cta-button modal-submit-button"
                   type="submit"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <BeatLoader />
+                    <BeatLoader color="#fff" size={10} />
                   ) : modalType === "create" ? (
-                    "Create"
+                    "Create & Enter"
                   ) : (
                     "Join"
-                  )}{" "}
+                  )}
                 </button>
               </form>
             </div>
           </div>
         )}
+
         <section className="hero-section">
-          <div className="container">
+          <div className="hero-content container">
             <h1 className="hero-title">
-              Collaborate in Real-Time, Build Faster.
+              The Ultimate Workspace for Developers
             </h1>
             <p className="hero-subtitle">
-              The ultimate collaborative code editor with a shared terminal,
-              live editing, and seamless integration. Start coding together,
-              instantly.
+              Code, chat, and collaborate in a seamless, real-time environment.
+              From pair programming to team-wide projects, we've got you covered.
             </p>
-
             <div className="hero-cta">
-              <Link to={isAuthenticated ? "/code-editor/solo" : "/login"}>
-                <button className="hero-cta-button">Code Solo</button>
-              </Link>
               <button
-                className="hero-cta-button"
-                onClick={() => handleOpenModal("join")}
-              >
-                Join Room
-              </button>
-              <button
-                className="hero-cta-button"
+                className="hero-cta-button primary"
                 onClick={() => handleOpenModal("create")}
               >
-                Create Room
+                Create a Room
               </button>
+              <button
+                className="hero-cta-button primary"
+                onClick={() => handleOpenModal("join")}
+              >
+                Join a Room
+              </button>
+              <Link to={isAuthenticated ? "/code-editor/solo" : "/login"}>
+                <button className="hero-cta-button primary">
+                  Practice Solo
+                </button>
+              </Link>
             </div>
           </div>
         </section>
 
         <section id="features" className="features-section">
           <div className="container">
-            <h2 className="section-title">Why Choose CodeTogether?</h2>
+            <h2 className="section-title">An All-in-One Solution</h2>
             <div className="features-grid">
               <div className="feature-card">
                 <FaUsers className="feature-icon" />
                 <h3>Real-Time Collaboration</h3>
                 <p>
-                  See changes as they happen. Multiple cursors, synchronized
-                  editing, and live feedback make pair programming a breeze.
+                  See changes as they happen with multi-cursor editing and synchronized scrolling.
+                </p>
+              </div>
+              <div className="feature-card">
+                <FaTerminal className="feature-icon" />
+                <h3>Integrated Input / Output</h3>
+                <p>
+                  Execute codes, run tests, and see output.
                 </p>
               </div>
               <div className="feature-card">
                 <FaCodeBranch className="feature-icon" />
                 <h3>Multi-Language Support</h3>
                 <p>
-                  From JavaScript to Python, C++ to Go, enjoy syntax
-                  highlighting and intelligent code completion for your favorite
-                  languages.
+                  Enjoy syntax highlighting for your favorite languages.
+                </p>
+              </div>
+               <div className="feature-card">
+                <FaVideo className="feature-icon" />
+                <h3>Audio & Video Chat</h3>
+                <p>
+                  Communicate clearly with high-quality, low-latency voice and video calls.
                 </p>
               </div>
               <div className="feature-card">
-                <FaTerminal className="feature-icon" />
-                <h3>Integrated Shared Terminal</h3>
+                <FaDesktop className="feature-icon" />
+                <h3>Screen Sharing</h3>
                 <p>
-                  Execute commands, run tests, and manage servers together in
-                  one shared terminal. No more screen sharing lag.
+                  Share your entire screen or a specific application window with your collaborators.
+                </p>
+              </div>
+              <div className="feature-card">
+                <FaChalkboardTeacher className="feature-icon" />
+                <h3>Interactive Whiteboard</h3>
+                <p>
+                  Brainstorm ideas, draw diagrams, and visualize complex problems together.
                 </p>
               </div>
             </div>
@@ -191,17 +222,15 @@ const Home = () => {
                 <div className="step-number">1</div>
                 <h3>Create a Room</h3>
                 <p>
-                  Start a new session with a single click. No sign-up required
-                  to get started.
+                  Start a new session with a single click and get a unique room ID.
                 </p>
               </div>
               <div className="step-arrow">→</div>
               <div className="step">
                 <div className="step-number">2</div>
-                <h3>Share the Link</h3>
+                <h3>Send Invite</h3>
                 <p>
-                  Invite your team by sending them a unique, secure link to your
-                  session.
+                  Share the room ID with your colleagues to invite them to the session.
                 </p>
               </div>
               <div className="step-arrow">→</div>
@@ -209,8 +238,7 @@ const Home = () => {
                 <div className="step-number">3</div>
                 <h3>Code Together</h3>
                 <p>
-                  Enjoy a seamless collaborative coding experience in your
-                  shared environment.
+                  Enjoy a seamless collaborative experience in your shared environment.
                 </p>
               </div>
             </div>

@@ -32,19 +32,19 @@ const Signup = () => {
       !formData.email.trim() ||
       !formData.password.trim()
     ) {
-      toast.error("Field cannot be empty");
+      toast.error("All fields are required.");
       setIsLoading(false);
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      toast.error("Invalid email format");
+      toast.error("Invalid email format.");
       setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      toast.error("Password must contain atleast 6 characters");
+      toast.error("Password must be at least 6 characters long.");
       setIsLoading(false);
       return;
     }
@@ -56,7 +56,7 @@ const Signup = () => {
       toast.success(response.data.message);
       navigate("/");
     } catch (error) {
-      toast.error(error.response.data.message || "Signup failed");
+      toast.error(error.response?.data?.message || "Signup failed");
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +66,7 @@ const Signup = () => {
     setIsGoogleLoading(true);
     try {
       const googleUser = await axios.get(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
+        import.meta.env.VITE_GOOGLE_LOGIN_API,
         {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         }
@@ -98,110 +98,115 @@ const Signup = () => {
   });
 
   return (
-    <div className="signup-page">
-      <form onSubmit={handleSubmit} className="signup-form">
+    <div className="auth-page">
+      <form onSubmit={handleSubmit} className="auth-form">
         <div className="header">
-          <div className="logo-container">
-            <FaCode className="logo" />
-          </div>
+          <Link to="/" className="logo-container">
+            <FaCode className="logo-icon" />
+          </Link>
           <div className="title">
             <div className="title1">Code</div>
             <div className="title2">Together</div>
           </div>
+          <p className="subtitle">Create an account to start collaborating</p>
         </div>
-        <div className="input">
+
+        <div className="input-group">
           <label className="label">Full Name</label>
           <div className="input-wrapper">
             <User className="input-icon" />
             <input
               type="text"
               value={formData.fullname}
-              placeholder="Fullname"
+              placeholder="e.g. Dipanshu Rai"
               onChange={(e) =>
                 setFormData({ ...formData, fullname: e.target.value })
               }
-              className="input-container"
+              className="input-field"
             />
           </div>
         </div>
 
-        <div className="input">
+        <div className="input-group">
           <label className="label">Email</label>
           <div className="input-wrapper">
             <Mail className="input-icon" />
             <input
-              type="text"
+              type="email"
               value={formData.email}
-              placeholder="Email"
+              placeholder="e.g. dipanshu@example.com"
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="input-container"
+              className="input-field"
             />
           </div>
         </div>
 
-        <div className="input">
+        <div className="input-group">
           <label className="label">Password</label>
           <div className="input-wrapper">
             <Lock className="input-icon" />
             <input
               type={showPassword ? "text" : "password"}
               value={formData.password}
-              placeholder="Password"
+              placeholder="Enter at least 6 characters"
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
-              className="input-container"
+              className="input-field"
             />
-            <div className="eye">
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <Eye className="input-icon" />
-                ) : (
-                  <EyeOff className="input-icon" />
-                )}
-              </button>
-            </div>
+            <button
+              type="button"
+              className="eye-btn"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <Eye className="input-icon" />
+              ) : (
+                <EyeOff className="input-icon" />
+              )}
+            </button>
           </div>
         </div>
 
         <button
           type="submit"
-          className="signup-btn"
+          className="submit-btn"
           disabled={isLoading || isGoogleLoading}
         >
-          {isLoading ? <Loader2 className="input-icon spin" /> : "Signup"}
+          {isLoading ? (
+            <Loader2 className="spinner-icon" />
+          ) : (
+            "Create Account"
+          )}
         </button>
 
-        <div className="separator">
-          <div className="line"></div>or<div className="line"></div>
+        <div className="separator1">
+          <div className="line"></div>
+          <span>OR</span>
+          <div className="line"></div>
         </div>
 
-        <div
+        <button
           type="button"
-          className="google-signup"
+          className="google-btn"
           onClick={() => googleLogin()}
           disabled={isLoading || isGoogleLoading}
         >
-          <button className="google-signup-btn">
-            {isGoogleLoading ? (
-              <Loader2 className="input-icon spin" />
-            ) : (
-              <FcGoogle className="google-logo" />
-            )}
-            Signup with Google
-          </button>
-        </div>
+          {isGoogleLoading ? (
+            <Loader2 className="spinner-icon" />
+          ) : (
+            <FcGoogle className="google-icon" />
+          )}
+          Sign up with Google
+        </button>
 
         <div className="form-footer">
           <p>
             Already have an account?{" "}
-            <Link to="/login" className="login-link">
-              Login in
+            <Link to="/login" className="footer-link">
+              Log In
             </Link>
           </p>
         </div>

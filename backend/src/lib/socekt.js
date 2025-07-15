@@ -48,7 +48,7 @@ const handleLeaveRoom = (socket) => {
   room.users.delete(socket.id);
   socketToRoomMap.delete(socket.id);
   socket.leave(roomId); // Leave the socket.io room
-  console.log(`User ${username}(${socket.id}) left room ${roomId}. Users left: ${room.users.size}`);
+  console.log(`User ${username} left room ${roomId}. Users left: ${room.users.size}`);
   
   // Notify others
   if(username){
@@ -65,7 +65,7 @@ const handleLeaveRoom = (socket) => {
     if (socket.id === room.adminId) {
       const newAdminId = room.users.keys().next().value; // Get the first user's ID
       room.adminId = newAdminId;
-      console.log(`Admin disconnected. New admin for room ${roomId} is ${newAdminId}`);
+      console.log(`Admin disconnected. New admin for room ${roomId} is ${room.users.get(newAdminId)}`);
       io.to(newAdminId).emit("new-admin");
     }
     // Always send updated list to remaining users
@@ -87,7 +87,7 @@ io.on("connect", (socket) => {
     if (rooms[roomId]) {
       return callback({
         success: false,
-        message: "Room already exists. Try a different ID.",
+        message: "Room already exists. Try a different Room ID.",
       });
     }
 
@@ -99,7 +99,7 @@ io.on("connect", (socket) => {
       users: new Map([[socket.id, name]]),
     };
 
-    console.log(`User ${name}(${socket.id}) created and joined room ${roomId}`);
+    console.log(`User ${name} created and joined room ${roomId}`);
     callback({ success: true, roomId, message: "Room created" });
 
     sendUpdatedUserList(roomId);
@@ -119,16 +119,13 @@ io.on("connect", (socket) => {
     socketToRoomMap.set(socket.id, roomId);
     rooms[roomId].users.set(socket.id, name);
 
-    console.log(`User ${name}(${socket.id}) joined room ${roomId}`);
+    console.log(`User ${name} joined room ${roomId}`);
     
     // Notify existing users that a new peer has joined.
     socket.to(roomId).emit("user-joined", { socketId: socket.id, name });
 
-    // The user list is no longer needed in the callback, as it's fetched later.
     callback({ success: true, roomId, message: "Room joined" });
 
-    // Notify everyone (including the new user) of the updated list.
-    // The new user will fetch this reliably with `check-user`, but this keeps existing users in sync.
     sendUpdatedUserList(roomId);
   });
 
@@ -171,16 +168,6 @@ io.on("connect", (socket) => {
     }
   });
 
-  socket.on("leave-room", () => {
-    console.log(`User ${socket.id} is explicitly leaving room ${socketToRoomMap.get(socket.id)}`);
-    handleLeaveRoom(socket);
-  });
-
-  socket.on("disconnect", (reason) => {
-    console.log(`User disconnected: ${socket.id}, reason: ${reason}`);
-    handleLeaveRoom(socket);
-  });
-
   // A user sends an offer to a specific peer
   socket.on("webrtc:offer", ({ to, offer }) => {
     console.log(`Forwarding offer from ${socket.id} to ${to}`);
@@ -196,6 +183,16 @@ io.on("connect", (socket) => {
   // A user sends an ICE candidate to a peer
   socket.on("webrtc:ice-candidate", ({ to, candidate }) => {
     io.to(to).emit("webrtc:ice-candidate", { from: socket.id, candidate });
+  });
+
+    socket.on("leave-room", () => {
+    console.log(`User ${socket.id} is leaving room ${socketToRoomMap.get(socket.id)}`);
+    handleLeaveRoom(socket);
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log(`User disconnected: ${socket.id}, reason: ${reason}`);
+    handleLeaveRoom(socket);
   });
 });
 

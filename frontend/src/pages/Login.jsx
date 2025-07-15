@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthProvider";
 import { axiosPrivate } from "../api/axios";
 import { useGoogleLogin } from "@react-oauth/google";
-import axios from "../api/axios";
+import axios from "axios";
 import "./Signup.css";
 
 const Login = () => {
@@ -27,26 +27,19 @@ const Login = () => {
     setIsLoading(true);
 
     if (!formData.email.trim() || !formData.password.trim()) {
-      toast.error("Field cannot be empty");
+      toast.error("Both email and password are required.");
       setIsLoading(false);
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      toast.error("Invalid email format");
-      setIsLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error("Password must contain atleast 6 characters");
+      toast.error("Invalid email format.");
       setIsLoading(false);
       return;
     }
 
     try {
       const response = await axiosPrivate.post("/api/auth/login", formData);
-      
       const { accessToken, user } = response.data;
       setAuth({ accessToken, user });
       toast.success(response.data.message);
@@ -58,31 +51,29 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLoginSuccess=async(tokenResponse)=>{
+  const handleGoogleLoginSuccess = async (tokenResponse) => {
     setIsGoogleLoading(true);
-
-    try{
-      // Get user info from google
-      const googleUser=await axios.get(
+    try {
+      const googleUser = await axios.get(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         {
-          headers: {Authorization: `Bearer ${tokenResponse.access_token}`},
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         }
       );
 
-      // Send user info to your backend
-      const {data}=await axiosPrivate.post("/api/auth/google-login",{                
+      const { data } = await axiosPrivate.post("/api/auth/google-login", {
         email: googleUser.data.email,
         fullname: googleUser.data.name,
-      });      
+        avatar: googleUser.data.picture,
+      });
 
-      // Set auth state from your backend's response
-      const {accessToken, user}=data;
-      setAuth({accessToken, user});
-      toast.success(data.message || "Login successful");
+      const { accessToken, user } = data;
+      setAuth({ accessToken, user });
+      toast.success(data.message || "Login successful!");
       navigate("/");
-    } catch(error) {
-      toast.error("Google login failed")
+    } catch (err) {
+      console.error(err);
+      toast.error("Google login failed. Please try again.");
     } finally {
       setIsGoogleLoading(false);
     }
@@ -96,76 +87,95 @@ const Login = () => {
   });
 
   return (
-    <div className="signup-page">
-      <form onSubmit={handleSubmit} className="signup-form">
+    <div className="auth-page">
+      <form onSubmit={handleSubmit} className="auth-form">
         <div className="header">
-          <div className="logo-container">
-            <FaCode className="logo" />
-          </div>
+          <Link to="/" className="logo-container">
+            <FaCode className="logo-icon" />
+          </Link>
           <div className="title">
             <div className="title1">Code</div>
             <div className="title2">Together</div>
           </div>
+          <p className="subtitle">Welcome back! Please log in to your account.</p>
         </div>
-        <div className="input">
+
+        <div className="input-group">
           <label className="label">Email</label>
           <div className="input-wrapper">
             <Mail className="input-icon" />
             <input
               type="email"
               value={formData.email}
-              placeholder="Email"
+              placeholder="e.g. dipanshu@example.com"
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="input-container"
+              className="input-field"
             />
           </div>
         </div>
-        <div className="input">
+
+        <div className="input-group">
           <label className="label">Password</label>
           <div className="input-wrapper">
             <Lock className="input-icon" />
             <input
               type={showPassword ? "text" : "password"}
               value={formData.password}
-              placeholder="Password"
+              placeholder="Enter your password"
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
-              className="input-container"
+              className="input-field"
             />
-            <div className="eye">
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <Eye className="input-icon" />
-                ) : (
-                  <EyeOff className="input-icon" />
-                )}
-              </button>
-            </div>
+            <button
+              type="button"
+              className="eye-btn"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <Eye className="input-icon" />
+              ) : (
+                <EyeOff className="input-icon" />
+              )}
+            </button>
           </div>
         </div>
-        <button type="submit" className="signup-btn" disabled={isLoading}>
-          {isLoading ? <Loader2 className="input-icon spin" /> : "Login"}
+
+        <button
+          type="submit"
+          className="submit-btn"
+          disabled={isLoading || isGoogleLoading}
+        >
+          {isLoading ? <Loader2 className="spinner-icon" /> : "Log In"}
         </button>
-        <div className="separator">
-          <div className="line"></div>or<div className="line"></div>
+
+        <div className="separator1">
+          <div className="line"></div>
+          <span>OR</span>
+          <div className="line"></div>
         </div>
-        <div className="google-signup">
-          <button type="button" onClick={() => googleLogin()} className="google-signup-btn" disabled={isLoading || isGoogleLoading}>
-            {isGoogleLoading ? <Loader2 className="input-icon spin" /> : <FcGoogle className="google-logo" />}
-            Login with Google
-          </button>
-        </div>
+
+        <button
+          type="button"
+          className="google-btn"
+          onClick={() => googleLogin()}
+          disabled={isLoading || isGoogleLoading}
+        >
+          {isGoogleLoading ? (
+            <Loader2 className="spinner-icon" />
+          ) : (
+            <FcGoogle className="google-icon" />
+          )}
+          Log in with Google
+        </button>
+
         <div className="form-footer">
           <p>
-            Don't have account{" "}
-            <Link to="/signup" className="login-link">
-              Signup
+            Don't have an account?{" "}
+            <Link to="/signup" className="footer-link">
+              Sign Up
             </Link>
           </p>
         </div>

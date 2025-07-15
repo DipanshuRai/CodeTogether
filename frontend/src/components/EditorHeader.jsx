@@ -10,6 +10,7 @@ import {
   FaVideoSlash,
   FaCode,
   FaCopy,
+  FaDesktop,
 } from "react-icons/fa";
 import { PiPencilCircleFill } from "react-icons/pi";
 import { VscOutput } from "react-icons/vsc";
@@ -35,13 +36,14 @@ const EditorHeader = ({
   toggleVideo,
   activeView,
   onViewChange,
+  isScreenSharing,
+  onToggleScreenShare,
 }) => {
   const { roomId } = useParams();
   const navigate = useNavigate();
 
   const runCode = async () => {
     const sourceCode = editorRef.current.getValue();
-
     if (!sourceCode) return;
     try {
       setIsLoading(true);
@@ -149,14 +151,29 @@ const EditorHeader = ({
           </button>
           <button
             onClick={toggleVideo}
-            className={`control-btn ${!isVideoEnabled ? "disabled" : ""}`}
-            title={isVideoEnabled ? "Turn off camera" : "Turn on camera"}
+            className={`control-btn ${!isVideoEnabled ? "disabled" : ""} ${
+              isScreenSharing ? "no-pointer" : ""
+            }`}
+            title={
+              isScreenSharing
+                ? "Stop screen sharing to use camera"
+                : isVideoEnabled
+                ? "Turn off camera"
+                : "Turn on camera"
+            }
           >
             {isVideoEnabled ? (
               <FaVideo size={16} />
             ) : (
               <FaVideoSlash size={16} />
             )}
+          </button>
+          <button
+            onClick={onToggleScreenShare}
+            className={`control-btn ${isScreenSharing ? "active" : ""}`}
+            title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
+          >
+            <FaDesktop size={16} />
           </button>
           <button
             className={`control-btn`}

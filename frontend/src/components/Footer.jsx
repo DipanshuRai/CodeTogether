@@ -6,20 +6,15 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-socials">
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="social-icon">
+          <a href="https://github.com/DipanshuRai" target="_blank" rel="noopener noreferrer" className="social-icon">
             <FaGithub />
           </a>
           <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="social-icon">
             <FaTwitter />
           </a>
-          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-icon">
+          <a href="https://www.linkedin.com/in/dipanshu-rai-1b913025b" target="_blank" rel="noopener noreferrer" className="social-icon">
             <FaLinkedin />
           </a>
-        </div>
-        <div className="footer-links">
-          <a href="/privacy">Privacy Policy</a>
-          <a href="/terms">Terms of Service</a>
-          <a href="/contact">Contact</a>
         </div>
         <p className="footer-copyright">
           © {new Date().getFullYear()} CodeTogether. All rights reserved.

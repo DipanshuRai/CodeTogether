@@ -33,10 +33,13 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <a href="/" className="navbar-logo">
+        <Link to="/" className="navbar-logo">
           <FaCode className="navbar-icon" />
-          CodeTogether
-        </a>
+          <div className="navbar-title">
+            <div className="name1">Code</div>
+            <div className="name2">Together</div>
+          </div>
+        </Link>
 
         <div className="menu-icon" onClick={toggleMenu}>
           {isMenuOpen ? <FaTimes /> : <FaBars />}

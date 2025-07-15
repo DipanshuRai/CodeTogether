@@ -21,28 +21,31 @@
 }
 
 .navbar-logo {
-  color: var(--text-color);
   display: flex;
   align-items: center;
-  text-decoration: none;
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
 }
 
 .navbar-icon {
   margin-right: 0.5rem;
-  color: var(--primary-color);
+  margin-bottom: 2px;
+  color: blueviolet;
+  width: 25px;
+  height: 25px;
+}
+
+.navbar-title{
+  display: flex;
+}
+
+.name2{
+  color: blueviolet;
 }
 
 .nav-menu {
   display: flex;
-  align-items: center;
   list-style: none;
-  text-align: center;
-}
-
-.nav-item {
-  height: 80px;
 }
 
 .nav-links {
@@ -51,7 +54,6 @@
   align-items: center;
   text-decoration: none;
   padding: 0 1rem;
-  height: 100%;
   transition: all 0.2s ease-in-out;
 }
 
@@ -100,7 +102,7 @@
   display: none;
 }
 
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 720px) {
   .nav-buttons-desktop {
     display: none;
   }
