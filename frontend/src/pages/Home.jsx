@@ -80,7 +80,6 @@ const Home = () => {
       generateIdSegment(),
     ].join("-");
     setRoomId(randomRoomId);
-    toast.success("Generated a new Room ID!");
   };
 
   return (

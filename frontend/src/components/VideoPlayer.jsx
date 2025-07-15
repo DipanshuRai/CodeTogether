@@ -1,70 +1,92 @@
 import { useEffect, useRef, useState } from 'react';
-import { FaUserCircle } from 'react-icons/fa';
+import { FaUserCircle, FaExpand, FaCompress } from 'react-icons/fa';
 import './VideoPlayer.css';
 
-const VideoPlayer = ({ stream, name, isMuted, isVideoEnabled }) => {
+const VideoPlayer = ({
+  stream,
+  audioStream,
+  name,
+  isMuted,
+  isVideoEnabled, // For local player only
+  isFullscreen,
+  onToggleFullscreen
+}) => {
   const videoRef = useRef(null);
-  // This state is the single source of truth for visibility inside this component
+  const audioRef = useRef(null);
   const [isEffectivelyOn, setIsEffectivelyOn] = useState(true);
 
-  // This effect handles the stream itself
+  // This effect handles the video stream and remote track state
   useEffect(() => {
     if (videoRef.current && stream) {
-      // Assign the stream to our persistent video element
       videoRef.current.srcObject = stream;
     }
 
-    // For remote streams, we determine visibility by listening to the track
-    if (stream && isVideoEnabled === undefined) { // Check for undefined means it's a remote stream
-      const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) {
-        setIsEffectivelyOn(videoTrack.enabled); // Set initial state
+    const videoTrack = stream?.getVideoTracks()[0];
 
+    // For remote streams, visibility is determined by track mute/unmute events
+    if (stream && isVideoEnabled === undefined && videoTrack) {
         const handleStateChange = () => {
-          setIsEffectivelyOn(videoTrack.enabled);
+            // A paused producer track will have enabled=true, but muted=true
+            // A disabled track will have enabled=false
+            setIsEffectivelyOn(videoTrack.enabled && !videoTrack.muted);
         };
         
-        // Listen for when the remote user mutes/unmutes their video
+        handleStateChange(); // Set initial state
+        
         videoTrack.addEventListener('mute', handleStateChange);
         videoTrack.addEventListener('unmute', handleStateChange);
 
         return () => {
-          videoTrack.removeEventListener('mute', handleStateChange);
-          videoTrack.removeEventListener('unmute', handleStateChange);
+            videoTrack.removeEventListener('mute', handleStateChange);
+            videoTrack.removeEventListener('unmute', handleStateChange);
         };
-      } else {
-        // Stream exists but has no video track
+    } else if (!videoTrack) {
         setIsEffectivelyOn(false);
-      }
     }
   }, [stream, isVideoEnabled]);
 
-  // For the local stream, its visibility is directly controlled by the prop from the parent
+  // For the local stream, visibility is directly controlled by the prop from the parent
   useEffect(() => {
-    if (isVideoEnabled !== undefined) { // isVideoEnabled is only passed for the local user
+    if (isVideoEnabled !== undefined) {
       setIsEffectivelyOn(isVideoEnabled);
     }
   }, [isVideoEnabled]);
 
+  // Effect to handle the separate audio stream
+  useEffect(() => {
+    if (audioRef.current && audioStream) {
+      audioRef.current.srcObject = audioStream;
+    }
+  }, [audioStream]);
+
+
   return (
-    <div className="video-player-container">
-      {/* The video element is ALWAYS rendered but hidden via CSS */}
+    <div className={`video-player-container ${isFullscreen ? 'fullscreen' : ''}`}>
       <video
         ref={videoRef}
         autoPlay
         playsInline
-        muted={isMuted}
+        muted={isMuted || !!audioStream} // Mute video element if audio is handled separately
         className={`video-player ${!isEffectivelyOn ? 'video-hidden' : ''}`}
       />
 
-      {/* The placeholder is conditionally shown on top */}
       {!isEffectivelyOn && (
         <div className="video-placeholder">
           <FaUserCircle className="placeholder-icon" />
         </div>
       )}
       
-      <div className="video-player-name">{name}</div>
+      {/* FIX: Added check for audioStream.active before rendering */}
+      {audioStream?.active && <audio ref={audioRef} autoPlay muted={isMuted} />}
+      
+      <div className="video-player-overlay">
+        <div className="video-player-name">{name}</div>
+        {onToggleFullscreen && (
+          <button className="video-player-btn" onClick={onToggleFullscreen} title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
+            {isFullscreen ? <FaCompress /> : <FaExpand />}
+          </button>
+        )}
+      </div>
     </div>
   );
 };
