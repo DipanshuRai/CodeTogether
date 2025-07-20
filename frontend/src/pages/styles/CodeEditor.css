@@ -10,10 +10,9 @@
 /* --- Yjs Awareness Cursors (Improved and Corrected for Visibility) --- */
 
 .y-cursor {
-  position: relative; /* Use relative to allow the label to be positioned correctly */
+  position: absolute; /* Changed from relative to absolute for correct positioning */
   box-sizing: border-box;
-  height: 100%;
-  z-index: 10;
+  z-index: 30; /* Increased z-index to ensure visibility above editor elements */
   
   /* Use the --y-color variable provided by y-monaco, with a bright fallback */
   border-left: 2px solid var(--y-color, orange); 
@@ -21,7 +20,7 @@
 
 .y-cursor-selection {
   position: absolute;
-  z-index: 10;
+  z-index: 30; /* Increased z-index */
   box-sizing: border-box;
   
   /* Use the user's color for the text selection area */
@@ -32,7 +31,7 @@
 .y-cursor-label {
   position: absolute;
   top: -1.4em;
-  left: -1px;
+  left: -2px; /* Adjusted for better alignment with the cursor */
   box-sizing: border-box;
   
   /* Use the user's color for the name label background */
