@@ -14,7 +14,7 @@ import { useAuth } from "../context/AuthProvider.jsx";
 import { useSocket } from "../context/socket.jsx";
 import toast from "react-hot-toast";
 import { BeatLoader } from "react-spinners";
-import "./Home.css";
+import "./styles/Home.css";
 
 const Home = () => {
   const { auth } = useAuth();
@@ -157,6 +157,24 @@ const Home = () => {
               <Link to={isAuthenticated ? "/code-editor/solo" : "/login"}>
                 <button className="hero-cta-button primary">
                   Practice Solo
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="hero-section">
+          <div className="hero-content container">
+            <h1 className="hero-title">
+              Draw
+            </h1>
+            <p className="hero-subtitle">
+              Write and visualize
+            </p>
+            <div className="hero-cta">
+              <Link to={isAuthenticated ? "/whiteboard" : "/login"}>
+                <button className="hero-cta-button primary">
+                  Open Whiteboard
                 </button>
               </Link>
             </div>

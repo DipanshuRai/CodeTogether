@@ -1,5 +1,4 @@
 import { createWorker } from "mediasoup";
-// import { workers } from "mediasoup/node/lib/Worker";
 
 let worker;
 

@@ -17,7 +17,7 @@ import { VscOutput } from "react-icons/vsc";
 import { IoExit } from "react-icons/io5";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import "./EditorHeader.css";
+import "./styles/EditorHeader.css";
 
 const EditorHeader = ({
   language,

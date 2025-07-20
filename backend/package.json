@@ -24,6 +24,8 @@
     "morgan": "^1.10.0",
     "nodemon": "^3.1.10",
     "parser": "^0.1.4",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.27"
   }
 }

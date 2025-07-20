@@ -36,7 +36,10 @@
     "react-sketch-canvas": "^6.2.0",
     "react-spinners": "^0.17.0",
     "socket.io-client": "^4.8.1",
-    "spinner": "^0.3.4"
+    "spinner": "^0.3.4",
+    "y-monaco": "^0.1.6",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.27"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

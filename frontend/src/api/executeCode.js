@@ -1,5 +1,5 @@
 import axios from "axios";
-import { LANGUAGE_VERSIONS } from "../constants.js";
+import { LANGUAGE_VERSIONS } from "../utils/constants.js";
 
 const MAX_CODE_LENGTH = 100000; // 100 KB limit for source code
 const MAX_STDIN_LENGTH = 10000;  // 10 KB limit for stdin

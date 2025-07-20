@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { VscOutput } from "react-icons/vsc";
-import "./Output.css";
+import "./styles/Output.css";
 
 const Output = ({ output, isLoading, isError }) => {
   const renderContent = () => {

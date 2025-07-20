@@ -4,7 +4,7 @@ import { FaCode, FaBars, FaTimes } from "react-icons/fa";
 import { useAuth } from "../context/AuthProvider";
 import { axiosPrivate } from "../api/axios";
 import toast from "react-hot-toast";
-import "./Navbar.css";
+import "./styles/Navbar.css";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

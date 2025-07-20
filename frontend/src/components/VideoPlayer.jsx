@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FaUserCircle, FaExpand, FaCompress } from 'react-icons/fa';
-import './VideoPlayer.css';
+import './styles/VideoPlayer.css';
 
 const VideoPlayer = ({
   stream,

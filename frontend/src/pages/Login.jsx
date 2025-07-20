@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthProvider";
 import { axiosPrivate } from "../api/axios";
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
-import "./Signup.css";
+import "./styles/Signup.css";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);

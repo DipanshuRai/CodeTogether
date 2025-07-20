@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { LANGUAGE_VERSIONS } from "../constants";
-import { LANGUAGE_ICONS, DEFAULT_ICON } from "../languageIcons";
+import { LANGUAGE_VERSIONS } from "../utils/constants";
+import { LANGUAGE_ICONS, DEFAULT_ICON } from "../utils/languageIcons";
 import { IoChevronDown } from "react-icons/io5";
-import "./LanguageSelector.css";
+import "./styles/LanguageSelector.css";
 
 const languages = Object.entries(LANGUAGE_VERSIONS);
 

@@ -1,5 +1,5 @@
 import { FaKeyboard } from "react-icons/fa";
-import "./Input.css";
+import "./styles/Input.css";
 
 const Input = ({ input, setInput }) => {
   return (
