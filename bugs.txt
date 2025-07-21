@@ -1,1 +1,4 @@
-1. when new user joins, he did not see the updated code until an updation is performed after join
+1. When screen sharing turns off, remove its UI from users list
+2. Screen share and video share is not visible to others
+3. Code writing bug
+4. Multiple rerenders
