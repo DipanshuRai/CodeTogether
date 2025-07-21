@@ -4,7 +4,6 @@ import * as Y from 'yjs';
 export const rooms = {}; // Stores mediasoup router, users, peers
 export const socketToRoomMap = new Map(); // Maps socket.id to roomId
 export const roomDocs = new Map(); // Stores Y.Doc for each room for code
-export const roomAwarenessStates = new Map(); // Stores awareness instance for each room
 
 // Helper function to initialize room state
 export const initializeRoomState = (roomId, router) => {

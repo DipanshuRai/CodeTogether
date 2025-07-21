@@ -8,7 +8,7 @@ import Home from "./pages/Home.jsx";
 import PersistLogin from "./components/PersistLogin.jsx";
 import RedirectIfAuth from "./components/RedirectIfAuth.jsx";
 import "./App.css";
-import Whiteboard from "./pages/Whiteboard.jsx";
+import Canvas from "./pages/Canvas.jsx";
 
 const App = () => {
   const {auth}=useAuth();
@@ -27,8 +27,8 @@ const App = () => {
             element={auth?.accessToken ? <CodeEditor /> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/whiteboard" 
-            element={auth?.accessToken ? <Whiteboard /> : <Navigate to="/login" />} 
+            path="/canvas" 
+            element={auth?.accessToken ? <Canvas /> : <Navigate to="/login" />} 
           />
         </Route>
       </Routes>

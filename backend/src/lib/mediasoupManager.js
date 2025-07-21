@@ -77,7 +77,7 @@ export const initializeMediasoupHandlers = (socket) => {
         try {
             const consumer = await transport.consume({ producerId, rtpCapabilities, paused: true });
             rooms[roomId].peers[socket.id].consumers.push(consumer);
-            consumer.on('producerclose', () => io.to(socket.id).emit('consumer-closed', { consumerId: consumer.id }));
+            consumer.on('producerclose', () => socket.to(socket.id).emit('consumer-closed', { consumerId: consumer.id }));
             callback({ id: consumer.id, producerId, kind: consumer.kind, rtpParameters: consumer.rtpParameters });
         } catch (error) {
             callback({ error: error.message });

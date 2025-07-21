@@ -7,19 +7,20 @@ import {
   FaVideo,
   FaDesktop,
   FaChalkboardTeacher,
+  FaBolt,
+  FaShieldAlt,
+  FaCloud,
 } from "react-icons/fa";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { useAuth } from "../context/AuthProvider.jsx";
-import { useSocket } from "../context/socket.jsx";
 import toast from "react-hot-toast";
 import { BeatLoader } from "react-spinners";
 import "./styles/Home.css";
 
 const Home = () => {
   const { auth } = useAuth();
-  const socket = useSocket();
-  const isAuthenticated = auth?.user ? true : false;
+  const isAuthenticated = !!auth?.user;
   const navigate = useNavigate();
 
   const [modalType, setModalType] = useState(null);
@@ -50,30 +51,13 @@ const Home = () => {
       toast.error("'solo' is a reserved ID. Please choose another.");
       return;
     }
-    if (!socket) {
-      toast.error("Connection error. Please try again later.");
-      return;
-    }
     setIsSubmitting(true);
-
-    const eventToEmit = modalType === "create" ? "create-room" : "join-room";
-
-    socket.emit(eventToEmit, roomId, auth?.user?.fullname, (response) => {
-      setIsSubmitting(false);
-
-      if (response.success) {
-        toast.success(response.message);
-        navigate(`/code-editor/${response.roomId}`);
-      } else {
-        toast.error(response.message);
-      }
-    });
+    navigate(`/code-editor/${roomId}`, { state: { action: modalType } });
   };
 
   const handleAutoGenerateRoomID = () => {
-    const generateIdSegment = (length = 4) => {
-      return Math.random().toString(36).substring(2, 2 + length);
-    };
+    const generateIdSegment = (length = 4) =>
+      Math.random().toString(36).substring(2, 2 + length);
     const randomRoomId = [
       generateIdSegment(),
       generateIdSegment(),
@@ -155,26 +139,8 @@ const Home = () => {
                 Join a Room
               </button>
               <Link to={isAuthenticated ? "/code-editor/solo" : "/login"}>
-                <button className="hero-cta-button primary">
+                <button className="hero-cta-button secondary">
                   Practice Solo
-                </button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="hero-section">
-          <div className="hero-content container">
-            <h1 className="hero-title">
-              Draw
-            </h1>
-            <p className="hero-subtitle">
-              Write and visualize
-            </p>
-            <div className="hero-cta">
-              <Link to={isAuthenticated ? "/whiteboard" : "/login"}>
-                <button className="hero-cta-button primary">
-                  Open Whiteboard
                 </button>
               </Link>
             </div>
@@ -194,16 +160,16 @@ const Home = () => {
               </div>
               <div className="feature-card">
                 <FaTerminal className="feature-icon" />
-                <h3>Integrated Input / Output</h3>
+                <h3>Integrated I/O</h3>
                 <p>
-                  Execute codes, run tests, and see output.
+                  Execute code in multiple languages, provide custom input, and view results instantly.
                 </p>
               </div>
               <div className="feature-card">
                 <FaCodeBranch className="feature-icon" />
                 <h3>Multi-Language Support</h3>
                 <p>
-                  Enjoy syntax highlighting for your favorite languages.
+                  Enjoy syntax highlighting and execution for your favorite languages like C++, Java, and Python.
                 </p>
               </div>
                <div className="feature-card">
@@ -217,15 +183,56 @@ const Home = () => {
                 <FaDesktop className="feature-icon" />
                 <h3>Screen Sharing</h3>
                 <p>
-                  Share your entire screen or a specific application window with your collaborators.
+                  Share your entire screen or a specific application to guide your collaborators.
                 </p>
               </div>
               <div className="feature-card">
                 <FaChalkboardTeacher className="feature-icon" />
                 <h3>Interactive Whiteboard</h3>
                 <p>
-                  Brainstorm ideas, draw diagrams, and visualize complex problems together.
+                  Brainstorm ideas, draw system diagrams, and visualize complex problems together.
                 </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <section className="hero-section draw-section">
+          <div className="hero-content container">
+            <h1 className="hero-title">
+              From Concept to Creation
+            </h1>
+            <p className="hero-subtitle">
+              Our interactive board is your digital canvas. Perfect for system design interviews, architectural planning, or quick brainstorming sessions. Visualize workflows, map out components, and bring your ideas to life.
+            </p>
+            <div className="hero-cta">
+              <Link to={isAuthenticated ? "/canvas" : "/login"}>
+                <button className="hero-cta-button primary">
+                  Open Canvas
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="why-us-section">
+          <div className="container">
+            <h2 className="section-title">Why Choose CodeTogether?</h2>
+            <div className="features-grid">
+              <div className="feature-card">
+                <FaBolt className="feature-icon" />
+                <h3>Blazing Fast</h3>
+                <p>Powered by WebSockets and WebRTC for near-instantaneous updates and communication.</p>
+              </div>
+              <div className="feature-card">
+                <FaCloud className="feature-icon" />
+                <h3>No Installation</h3>
+                <p>Access a powerful, full-featured IDE directly from your browser. No downloads needed.</p>
+              </div>
+              <div className="feature-card">
+                <FaShieldAlt className="feature-icon" />
+                <h3>Secure & Private</h3>
+                <p>Your data is protected. Rooms are private and your code is never stored on our servers.</p>
               </div>
             </div>
           </div>
@@ -237,25 +244,25 @@ const Home = () => {
             <div className="steps-container">
               <div className="step">
                 <div className="step-number">1</div>
-                <h3>Create a Room</h3>
+                <h3>Create or Join</h3>
                 <p>
-                  Start a new session with a single click and get a unique room ID.
+                  Start a new session with a single click or join a colleague's room with their ID.
                 </p>
               </div>
               <div className="step-arrow">→</div>
               <div className="step">
                 <div className="step-number">2</div>
-                <h3>Send Invite</h3>
+                <h3>Share the Room ID</h3>
                 <p>
-                  Share the room ID with your colleagues to invite them to the session.
+                  Copy the unique room ID and share it with anyone you want to invite to the session.
                 </p>
               </div>
               <div className="step-arrow">→</div>
               <div className="step">
                 <div className="step-number">3</div>
-                <h3>Code Together</h3>
+                <h3>Code & Collaborate</h3>
                 <p>
-                  Enjoy a seamless collaborative experience in your shared environment.
+                  Enjoy a seamless, feature-rich collaborative experience in your shared environment.
                 </p>
               </div>
             </div>

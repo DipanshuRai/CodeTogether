@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ReactSketchCanvas } from "react-sketch-canvas";
 import { FaCode } from "react-icons/fa";
 import { Pen, Eraser, Undo, Redo, Trash2, Download } from "lucide-react";
-import "./styles/Whiteboard.css";
+import "./styles/Canvas.css";
 
 const TOOLS = {
   PEN: "pen",
@@ -11,7 +11,7 @@ const TOOLS = {
 };
 
 const VIBRANT_COLORS = [
-  "#FFFFFF",
+  "#c2c2c2ff",
   "#FF9500",
   "#4CD964",
   "#00A9FF",
@@ -19,12 +19,12 @@ const VIBRANT_COLORS = [
   "#FF2D55",
 ];
 
-const Whiteboard = () => {
+const Canvas = () => {
   const canvasRef = useRef(null);
   const [tool, setTool] = useState(TOOLS.PEN);
   const [strokeColor, setStrokeColor] = useState("#FFFFFF");
   const [brushSize, setBrushSize] = useState(4);
-  const [canvasColor] = useState("#555555ff");
+  const [canvasColor] = useState("#363636ff");
 
   const handleClear = () => canvasRef.current?.clearCanvas();
   const handleUndo = () => canvasRef.current?.undo();
@@ -61,11 +61,6 @@ const Whiteboard = () => {
   return (
     <div className="whiteboard-container">
       <div className="toolbar">
-        {/* <div className="tool-group">
-          <Link to="/" className="board-logo">
-            <FaCode className="navbar-icon" />
-          </Link>
-        </div> */}
 
         <div className="tool-group">
           <button
@@ -151,4 +146,4 @@ const Whiteboard = () => {
   );
 };
 
-export default Whiteboard;
+export default Canvas;

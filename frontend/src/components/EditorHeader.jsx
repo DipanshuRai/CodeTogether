@@ -16,7 +16,6 @@ import { PiPencilCircleFill } from "react-icons/pi";
 import { VscOutput } from "react-icons/vsc";
 import { IoExit } from "react-icons/io5";
 import toast from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
 import "./styles/EditorHeader.css";
 
 const EditorHeader = ({
@@ -75,38 +74,30 @@ const EditorHeader = ({
 
   return (
     <header className="editor-header">
-      <NavLink to="/" className="navbar-logo">
-        <FaCode className="navbar-icon" />
-        <h1>Code</h1>
-        <span className="title-sec">Together</span>
-      </NavLink>
-      
-      <div className="mid-container">
+      <div className="header-section header-left">
+        <NavLink to="/" className="navbar-logo">
+          <FaCode className="navbar-icon" />
+          <h1>Code</h1>
+          <span className="title-sec">Together</span>
+        </NavLink>
+      </div>
+
+      <div className="header-section header-center">
         <LanguageSelector selectedLanguage={language} onSelect={onSelect} />
-        <button className="run-button" onClick={runCode} disabled={isLoading}>
+        <button className="action-btn run-button" onClick={runCode} disabled={isLoading}>
           <FaPlay size={15} />
           <span>{isLoading ? "Running..." : "Run Code"}</span>
         </button>
-      </div>
-
-      <button
-        className="board-btn"
-        onClick={() => onViewChange(activeView === "io" ? "whiteboard" : "io")}
-        title={
-          activeView === "io"
-            ? "Switch to Whiteboard"
-            : "Switch to Input/Output"
-        }
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={activeView}
-            initial={{ opacity: 0, x: -15 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 10 }}
-            transition={{ duration: 0.2 }}
-            className="btn-content"
-          >
+        <button
+          className="action-btn board-btn"
+          onClick={() => onViewChange(activeView === "io" ? "whiteboard" : "io")}
+          title={
+            activeView === "io"
+              ? "Switch to Whiteboard"
+              : "Switch to Input/Output"
+          }
+        >
+          <div key={activeView} className="btn-content-animated">
             {activeView === "io" ? (
               <>
                 <PiPencilCircleFill size={20} />
@@ -118,36 +109,34 @@ const EditorHeader = ({
                 <span>I/O</span>
               </>
             )}
-          </motion.div>
-        </AnimatePresence>
-      </button>
+          </div>
+        </button>
+      </div>
 
-      {roomId !== "solo" && (
-        <div className="media-controls">
-          <button className="control-btn" onClick={handleExitRoom} title="Leave Room"><IoExit size={19} /></button>
-          <button className="control-btn" onClick={copyRoomID} title="Copy Room ID"><FaCopy size={15} /></button>
-          
-          <button onClick={toggleAudio} className={`control-btn ${!isAudioEnabled ? "disabled" : ""}`} title={isAudioEnabled ? "Mute" : "Unmute"}>
-            {isAudioEnabled ? <FaMicrophone size={16} /> : <FaMicrophoneSlash size={16} />}
-          </button>
-
-          {/* FIX: Removed logic that disabled the video button during screen share */}
-          <button
-            onClick={toggleVideo}
-            className={`control-btn ${!isVideoEnabled ? "disabled" : ""}`}
-            title={isVideoEnabled ? "Turn off camera" : "Turn on camera"}
-          >
-            {isVideoEnabled ? <FaVideo size={16} /> : <FaVideoSlash size={16} />}
-          </button>
-          
-          <button onClick={onToggleScreenShare} className={`control-btn ${isScreenSharing ? "active" : ""}`} title={isScreenSharing ? "Stop Sharing" : "Share Screen"}>
-            <FaDesktop size={16} />
-          </button>
-          <button className="control-btn" onClick={onToggleUsers} title="Toggle Users Panel">
-            <FaUsers size={19} />
-          </button>
-        </div>
-      )}
+      <div className="header-section header-right">
+        {roomId !== "solo" && (
+          <div className="media-controls">
+            <button className="control-btn" onClick={onToggleUsers} title="Toggle Users Panel">
+              <FaUsers size={19} />
+            </button>
+            <button onClick={onToggleScreenShare} className={`control-btn ${isScreenSharing ? "active" : ""}`} title={isScreenSharing ? "Stop Sharing" : "Share Screen"}>
+              <FaDesktop size={16} />
+            </button>
+            <button
+              onClick={toggleVideo}
+              className={`control-btn ${!isVideoEnabled ? "disabled" : ""}`}
+              title={isVideoEnabled ? "Turn off camera" : "Turn on camera"}
+            >
+              {isVideoEnabled ? <FaVideo size={16} /> : <FaVideoSlash size={16} />}
+            </button>
+            <button onClick={toggleAudio} className={`control-btn ${!isAudioEnabled ? "disabled" : ""}`} title={isAudioEnabled ? "Mute" : "Unmute"}>
+              {isAudioEnabled ? <FaMicrophone size={16} /> : <FaMicrophoneSlash size={16} />}
+            </button>
+            <button className="control-btn" onClick={copyRoomID} title="Copy Room ID"><FaCopy size={15} /></button>
+            <button className="control-btn" onClick={handleExitRoom} title="Leave Room"><IoExit size={19} /></button>
+          </div>
+        )}
+      </div>
     </header>
   );
 };

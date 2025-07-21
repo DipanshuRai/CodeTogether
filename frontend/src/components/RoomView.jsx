@@ -1,94 +1,86 @@
 import { useState } from 'react';
 import VideoPlayer from './VideoPlayer';
-import './styles/RoomView.css'
+import './styles/RoomView.css';
 
 const RoomView = ({ myStream, screenStream, remoteStreams, users, auth, isVideoEnabled }) => {
-  const [fullscreenStream, setFullscreenStream] = useState(null);
+  const [fullscreenInfo, setFullscreenInfo] = useState(null);
 
-  const toggleFullscreen = (stream, name, type) => {
-    setFullscreenStream(prev => (prev?.stream === stream ? null : { stream, name, type }));
+  const handleToggleFullscreen = (stream, name, type) => {
+    setFullscreenInfo(prev => (prev?.stream === stream ? null : { stream, name, type }));
   };
 
-  const remoteUserElements = users.map(user => {
-    const userStreams = remoteStreams[user.id] || {};
-    const userName = user.name;
-    if (!userStreams.video && !userStreams.screen) return null;
-
+  const renderVideoPlayer = (info, isThumbnail = false) => {
+    const { stream, name, type, ...props } = info;
     return (
-      <div key={user.id} className="remote-user-container">
-        {userStreams.screen && (
-          <VideoPlayer 
-            stream={userStreams.screen} 
-            name={`${userName}'s Screen`} 
-            onToggleFullscreen={() => toggleFullscreen(userStreams.screen, `${userName}'s Screen`, 'screen')} 
-          />
-        )}
-        {userStreams.video && (
-          <VideoPlayer 
-            stream={userStreams.video} 
-            audioStream={userStreams.audio} 
-            name={userName} 
-            onToggleFullscreen={() => toggleFullscreen(userStreams.video, userName, 'video')} 
-          />
-        )}
-      </div>
+      <VideoPlayer
+        key={name}
+        stream={stream}
+        name={name}
+        isFullscreen={!isThumbnail && !!fullscreenInfo}
+        onToggleFullscreen={() => handleToggleFullscreen(stream, name, type)}
+        {...props}
+      />
     );
-  });
+  };
+  
+  const allStreams = [
+    { stream: myStream, name: `${auth?.user?.fullname} (You)`, type: 'video', isMuted: true, isVideoEnabled },
+    screenStream && { stream: screenStream, name: "Your Screen", type: 'screen', isMuted: true },
+    ...users.flatMap(user => {
+      const userStreams = remoteStreams[user.id] || {};
+      const userName = user.name;
+      return [
+        userStreams.video && { stream: userStreams.video, audioStream: userStreams.audio, name: userName, type: 'video' },
+        userStreams.screen && { stream: userStreams.screen, name: `${userName}'s Screen`, type: 'screen' }
+      ].filter(Boolean);
+    })
+  ].filter(Boolean);
 
-  if (fullscreenStream) {
-    return (
-      <div className="fullscreen-container">
-        <div className="fullscreen-main-video">
-          <VideoPlayer 
-            stream={fullscreenStream.stream} 
-            name={fullscreenStream.name} 
-            isFullscreen={true} 
-            onToggleFullscreen={() => setFullscreenStream(null)} 
-          />
-        </div>
-        <div className="fullscreen-thumbnails">
-          <VideoPlayer 
-            stream={myStream} 
-            name={`${auth?.user?.fullname} (You)`} 
-            isMuted={true} 
-            isVideoEnabled={isVideoEnabled}
-            onToggleFullscreen={() => toggleFullscreen(myStream, `${auth?.user?.fullname} (You)`, 'video')} 
-          />
-          {screenStream && (
-            <VideoPlayer 
-              stream={screenStream} 
-              name="Your Screen" 
-              isMuted={true} 
-              onToggleFullscreen={() => toggleFullscreen(screenStream, "Your Screen", 'screen')} 
-            />
-          )}
-          {remoteUserElements}
-        </div>
-      </div>
-    );
-  }
-
-  return (
+  const mainView = (
     <div className="users-panel">
       <div className="my-video-container">
-        <VideoPlayer 
-          stream={myStream} 
-          name={`${auth?.user?.fullname} (You)`} 
-          isMuted={true} 
-          isVideoEnabled={isVideoEnabled}
-          onToggleFullscreen={() => toggleFullscreen(myStream, `${auth?.user?.fullname} (You)`, 'video')} 
-        />
-        {screenStream && (
-          <VideoPlayer 
-            stream={screenStream} 
-            name="Your Screen" 
-            isMuted={true}
-            onToggleFullscreen={() => toggleFullscreen(screenStream, "Your Screen", 'screen')} 
-          />
-        )}
+        {renderVideoPlayer(allStreams[0])}
+        {screenStream && renderVideoPlayer(allStreams[1])}
       </div>
-      <div className="remote-videos-grid">{remoteUserElements}</div>
+      <div className="remote-videos-grid">
+        {users.map(user => {
+          const userStreams = remoteStreams[user.id] || {};
+          const userName = user.name;
+          return (
+            <div key={user.id} className="remote-user-container">
+              {userStreams.screen && 
+                renderVideoPlayer({ stream: userStreams.screen, name: `${userName}'s Screen`, type: 'screen' })
+              }
+              <VideoPlayer 
+                stream={userStreams.video} 
+                audioStream={userStreams.audio} 
+                name={userName} 
+                onToggleFullscreen={() => handleToggleFullscreen(userStreams.video, userName, 'video')} 
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
+  );
+
+  return (
+    <>
+      {mainView}
+      {fullscreenInfo && (
+        <div className="fullscreen-container">
+          <div className="fullscreen-main-video">
+            {renderVideoPlayer(fullscreenInfo)}
+          </div>
+          <div className="fullscreen-thumbnails">
+            {allStreams
+              .filter(s => s.stream !== fullscreenInfo.stream)
+              .map(info => renderVideoPlayer(info, true))
+            }
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

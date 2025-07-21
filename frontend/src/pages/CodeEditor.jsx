@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useParams, useLocation } from "react-router-dom";
 import { Editor } from "@monaco-editor/react";
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
@@ -11,7 +11,7 @@ import { useYjs } from "../hooks/useYjs";
 import EditorHeader from "../components/EditorHeader";
 import Input from "../components/Input";
 import Output from "../components/Output";
-import Whiteboard from "./Whiteboard";
+import Canvas from "./Canvas";
 import RoomView from "../components/RoomView";
 import Modal from "../components/Alert";
 import "./styles/CodeEditor.css";
@@ -19,13 +19,15 @@ import "./styles/CodeEditor.css";
 const CodeEditor = () => {
   const { auth } = useAuth();
   const socket = useSocket();
-  const { roomId } = useParams();  
+  const { roomId } = useParams(); 
+  const { state } = useLocation();
+  const action = state?.action || 'join'; 
 
   const {
     myStream, screenStream, remoteStreams, users,
     isAudioEnabled, isVideoEnabled, isScreenSharing,
     toggleMedia, toggleScreenShare,
-  } = useMediasoup(socket, roomId);
+  } = useMediasoup(socket, roomId, auth.user.fullname, action);  
 
   const editorRef = useRef(null);
 
@@ -42,19 +44,21 @@ const CodeEditor = () => {
 
   const isSolo = roomId === "solo";
 
+  const onLanguageChange=(newLanguage)=>{
+    setLanguage(newLanguage);
+  };
+
   const { updateCollabLanguage } = useYjs({
     socket,
     roomId,
     user: auth?.user,
     editorRef,
     language,
-    onLanguageChange: (newLanguage) => {
-      setLanguage(newLanguage);
-    },
+    onLanguageChange,
     enabled: !isSolo && auth?.user
   });
 
-  const handleLanguageSelect = (lang) => {
+  const handleLanguageSelect = useCallback((lang) => {
     if (lang !== language) {
       if (isSolo) {
         setLanguage(lang);
@@ -63,26 +67,30 @@ const CodeEditor = () => {
         setIsModalOpen(true);
       }
     }
-  };
+  },[language,isSolo]);
 
   // After confirmation, this function executes the appropriate change
-  const handleConfirmChange = () => {
+  const handleConfirmChange = useCallback(() => {
     if (!targetLanguage) return;
 
-    // For collab mode, update through Yjs.
-    // The local language state will be updated via the onLanguageChange callback
-    // for consistency, but we can also set it immediately for responsiveness.
     updateCollabLanguage(targetLanguage);
     setLanguage(targetLanguage);
     
     setIsModalOpen(false);
     setTargetLanguage(null);
-  };
+  },[targetLanguage, updateCollabLanguage]);
 
-  const handleCancelChange = () => {
+  const handleCancelChange = useCallback(() => {
     setIsModalOpen(false);
     setTargetLanguage(null);
-  };
+  }, []);
+
+  const toggleUsersPanel = useCallback(() => {
+    setIsUsersPanelVisible((prev) => !prev);
+  }, []);
+
+  const handleToggleAudio = useCallback(() => toggleMedia("audio"), [toggleMedia]);
+  const handleToggleVideo = useCallback(() => toggleMedia("video"), [toggleMedia]);
   
   // Effect to manage the slide-in animation for the right-hand view
   useEffect(() => {
@@ -92,6 +100,19 @@ const CodeEditor = () => {
       return () => clearTimeout(timer);
     }
   }, [activeView]);
+
+  const ioView = useMemo(() => (
+    <Allotment vertical>
+      <Allotment.Pane>
+        <Input input={input} setInput={setInput} />
+      </Allotment.Pane>
+      <Allotment.Pane>
+        <Output output={output} isLoading={isLoading} isError={isError} />
+      </Allotment.Pane>
+    </Allotment>
+  ), [input, output, isLoading, isError]);
+
+  const canvasView = useMemo(() => <Canvas/>, []);  
 
   return (
     <div className="code-editor-layout">
@@ -114,12 +135,12 @@ const CodeEditor = () => {
         setOutput={setOutput}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
-        onToggleUsers={() => setIsUsersPanelVisible((prev) => !prev)}
+        onToggleUsers={toggleUsersPanel}
         input={input}
         isAudioEnabled={isAudioEnabled}
         isVideoEnabled={isVideoEnabled}
-        toggleAudio={() => toggleMedia("audio")}
-        toggleVideo={() => toggleMedia("video")}
+        toggleAudio={handleToggleAudio}
+        toggleVideo={handleToggleVideo}
         isScreenSharing={isScreenSharing}
         onToggleScreenShare={toggleScreenShare}
         activeView={activeView}
@@ -128,7 +149,7 @@ const CodeEditor = () => {
       <div className="content-wrapper">
         <main className="main-content">
           <Allotment>
-            <Allotment.Pane preferredSize={850} minSize={300}>
+            <Allotment.Pane preferredSize={700} minSize={400}>
               <Editor
                 key={isSolo ? `solo-${language}` : 'collab-editor'}
                 height="100%"
@@ -137,33 +158,27 @@ const CodeEditor = () => {
                 defaultValue={isSolo ? CODE_SNIPPETS[language] : ""}
                 onMount={(editor) => {
                   editorRef.current = editor;
-                  // editor.getModel()?.setEOL(monaco.editor.EndOfLineSequence.LF);
                   if (!isSolo && editor) {
                     editor.focus();
                   }
                 }}
                 options={{
-                  minimap: { enabled: false },
+                  minimap: { enabled: true },
                   scrollBeyondLastLine: false,
                   wordWrap: 'on',
                   automaticLayout: true,
+                  padding: {
+                      top: 10,
+                      bottom: 10
+                  },
+                  formatOnPaste: true,
+                  mouseWheelZoom: true,
                 }}
               />
             </Allotment.Pane>
-            <Allotment.Pane minSize={300}>
+            <Allotment.Pane minSize={250}>
               <div className={`view-container ${isViewVisible ? "visible" : ""}`}>
-                {activeView === "io" ? (
-                  <Allotment vertical>
-                    <Allotment.Pane>
-                      <Input input={input} setInput={setInput} />
-                    </Allotment.Pane>
-                    <Allotment.Pane>
-                      <Output output={output} isLoading={isLoading} isError={isError} />
-                    </Allotment.Pane>
-                  </Allotment>
-                ) : (
-                  <Whiteboard />
-                )}
+                {activeView === "io" ? ioView : canvasView}
               </div>
             </Allotment.Pane>
           </Allotment>
@@ -173,9 +188,12 @@ const CodeEditor = () => {
         >
           {!isSolo && (
             <RoomView
-              myStream={myStream} screenStream={screenStream}
-              remoteStreams={remoteStreams} users={users}
-              isVideoEnabled={isVideoEnabled} auth={auth}
+              myStream={myStream} 
+              screenStream={screenStream}
+              remoteStreams={remoteStreams} 
+              users={users}
+              isVideoEnabled={isVideoEnabled} 
+              auth={auth}
             />
           )}
         </div>

@@ -17,9 +17,6 @@ export const useYjs = ({ socket, roomId, editorRef, onLanguageChange, enabled = 
             const yText = yDoc.getText("monaco");
             const yMetadata = yDoc.getMap("metadata");
 
-            // console.log("yText: ",yText);
-            // console.log("yMetadata: ",yMetadata);            
-
             const newCode = CODE_SNIPPETS[newLanguage] || "";
             
             yDoc.transact(() => {
@@ -75,7 +72,6 @@ export const useYjs = ({ socket, roomId, editorRef, onLanguageChange, enabled = 
             const onMetadataChange = (event) => {
                 if (!isDestroyed && event.keysChanged.has('language')) {
                     const newLanguage = yMetadata.get('language');
-                    console.log(newLanguage);
                     
                     if (newLanguage && typeof onLanguageChange === 'function') {
                         onLanguageChange(newLanguage);
@@ -117,9 +113,6 @@ export const useYjs = ({ socket, roomId, editorRef, onLanguageChange, enabled = 
                 isInitializedRef.current = false;
             };
         };
-
-        // const timer = setTimeout(initialize, 100);
-        // const cleanup = initialize();
 
         let cleanup;
 

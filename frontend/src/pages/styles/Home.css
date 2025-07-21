@@ -30,11 +30,17 @@
 }
 
 .hero-section {
-  background: linear-gradient(135deg, rgba(10, 10, 10, 0.85), rgba(18, 18, 18, 0.98)),
-              url('https://images.unsplash.com/photo-1618477388954-7852f32655ec?auto=format&fit=crop&w=1400') center center/cover no-repeat;
+  background: linear-gradient(135deg, rgba(10, 10, 10, 0.653), rgba(18, 18, 18, 0.98)),
+              url('/home-bg.avif') center center/cover no-repeat;
   padding: 120px 0;
   text-align: center;
 }
+
+.draw-section {
+    background: linear-gradient(135deg, rgba(10, 10, 10, 0.796), rgba(18, 18, 18, 1)),
+              url('/whiteboard-bg.png') center center/cover no-repeat;
+}
+
 
 .hero-content {
   display: flex;
@@ -74,6 +80,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   border: none;
+  text-decoration: none;
 }
 
 .hero-cta-button.primary {
@@ -85,7 +92,19 @@
   box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
 }
 
-.features-section {
+.hero-cta-button.secondary {
+  background-color: transparent;
+  color: var(--text-color);
+  border: 2px solid var(--border-color);
+}
+
+.hero-cta-button.secondary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  transform: translateY(-3px);
+}
+
+.features-section, .why-us-section {
   padding: 100px 0;
   background-color: var(--background-dark);
 }
@@ -192,7 +211,7 @@
 
 .modal-content {
   position: relative;
-  background-color: rgba(29, 29, 29, 0.7);
+  background-color: var(--surface-color);
   backdrop-filter: blur(10px);
   padding: 2.5rem;
   border-radius: 12px;
@@ -300,5 +319,8 @@
   }
   .section-title {
     font-size: 2.2rem;
+  }
+  .features-grid {
+    grid-template-columns: 1fr;
   }
 }

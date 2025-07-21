@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   createDevice,
@@ -14,7 +15,7 @@ const SCREEN_SHARE_ENCODINGS = [
   { rid: 'r2', maxBitrate: 900000, scalabilityMode: 'S1T3' },
 ];
 
-export const useMediasoup = (socket, roomId) => {
+export const useMediasoup = (socket, roomId, name, action) => {
   // Local Media State
   const [myStream, setMyStream] = useState(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
@@ -25,6 +26,9 @@ export const useMediasoup = (socket, roomId) => {
   // Remote Media State
   const [remoteStreams, setRemoteStreams] = useState({});
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
+
+  console.log("Users: ", users);
 
   // Mediasoup-specific refs
   const deviceRef = useRef(null);
@@ -66,16 +70,12 @@ export const useMediasoup = (socket, roomId) => {
   }, [socket]);
 
   useEffect(() => {
-    if (roomId === "solo" || !socket) return;
+    if (roomId === "solo" || !socket || !name || !action) return;
 
     let isMounted = true;
 
-    const init = async () => {
+    const initMediasoup = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        if (!isMounted) return stream.getTracks().forEach(t => t.stop());
-        setMyStream(stream);
-
         const device = createDevice();
         deviceRef.current = device;
 
@@ -85,12 +85,6 @@ export const useMediasoup = (socket, roomId) => {
         sendTransportRef.current = await createSendTransport(socket, device, roomId);
         recvTransportRef.current = await createRecvTransport(socket, device, roomId);
 
-        const videoTrack = stream.getVideoTracks()[0];
-        const audioTrack = stream.getAudioTracks()[0];
-
-        if (videoTrack) producersRef.current.video = await sendTransportRef.current.produce({ track: videoTrack, appData: { type: 'video' } });
-        if (audioTrack) producersRef.current.audio = await sendTransportRef.current.produce({ track: audioTrack, appData: { type: 'audio' } });
-        
         socket.emit("get-initial-producers", roomId, producers => {
           if (!isMounted) return;
           for (const { producerId, socketId, kind, type } of producers) {
@@ -99,11 +93,9 @@ export const useMediasoup = (socket, roomId) => {
         });
       } catch (err) {
         console.error("Initialization failed:", err);
-        toast.error("Camera/Mic access denied or media connection failed.");
+        toast.error("Media connection failed.");
       }
     };
-
-    init();
 
     const handleNewProducer = ({ producerId, socketId, kind, type }) => handleConsumeStream(producerId, socketId, kind, type);
     const handleProducerClosed = ({ socketId }) => setRemoteStreams(prev => { const ns = { ...prev }; delete ns[socketId]; return ns; });
@@ -125,6 +117,21 @@ export const useMediasoup = (socket, roomId) => {
     socket.on("update-user-list", handleUserListUpdate);
     socket.on("user-joined", handleNewUser);
     socket.on("user-left", handleUserLeft);
+
+    const eventToEmit = action === 'create' ? 'create-room' : 'join-room';
+    
+    socket.emit(eventToEmit, roomId, name, (response) => {
+      if (!isMounted) return;
+
+      if (response.success) {
+        toast.success(response.message);
+        setUsers(response.users.filter(u => u.id !== socket.id));
+        initMediasoup();
+      } else {
+        toast.error(response.message);
+        navigate('/');
+      }
+    });
     
     return () => {
       isMounted = false;
@@ -132,6 +139,7 @@ export const useMediasoup = (socket, roomId) => {
       screenStreamRef.current?.getTracks().forEach(track => track.stop());
       sendTransportRef.current?.close();
       recvTransportRef.current?.close();
+
       socket.off("new-producer", handleNewProducer);
       socket.off("producer-closed", handleProducerClosed);
       socket.off("specific-producer-closed", handleSpecificProducerClosed);
@@ -140,7 +148,7 @@ export const useMediasoup = (socket, roomId) => {
       socket.off("user-left", handleUserLeft);
       if (roomId !== "solo") socket.emit("leave-room");
     };
-  }, [socket, roomId, handleConsumeStream]);
+  }, [socket, roomId, name, action, handleConsumeStream, navigate]);
 
   const toggleScreenShare = useCallback(async () => {
     if (!sendTransportRef.current) return toast.error("Media server not connected.");
@@ -182,33 +190,54 @@ export const useMediasoup = (socket, roomId) => {
   }, [isScreenSharing]);
 
   const toggleMedia = useCallback(async (mediaType) => {
-    const producer = producersRef.current[mediaType];
-    if (!producer) return;
+    if (!sendTransportRef.current) {
+        toast.error("Media connection is not yet available.");
+        return;
+    }
 
-    if (producer.paused) {
+    const producer = producersRef.current[mediaType];
+    const isEnabling = !producer;
+
+    if (isEnabling) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ [mediaType]: true });
-        const newTrack = stream.getTracks()[0];
-        await producer.replaceTrack({ track: newTrack });
-        await producer.resume();
-        if (myStream) {
-          const oldTrack = myStream.getTracks().find(t => t.kind === mediaType);
-          if (oldTrack) myStream.removeTrack(oldTrack);
-          myStream.addTrack(newTrack);
-          setMyStream(new MediaStream(myStream.getTracks()));
-        }
+        const track = stream.getTracks()[0];
+
+        const newProducer = await sendTransportRef.current.produce({
+          track,
+          appData: { type: mediaType },
+        });
+
+        producersRef.current[mediaType] = newProducer;
+            
+        setMyStream(prevStream => {
+          const newStream = prevStream ? new MediaStream(prevStream.getTracks()) : new MediaStream();
+          newStream.addTrack(track);
+          return newStream;
+        });
         if (mediaType === 'video') setIsVideoEnabled(true);
         if (mediaType === 'audio') setIsAudioEnabled(true);
       } catch (error) {
+        console.error(`Failed to get ${mediaType} device.`, error);
         toast.error(`Could not start ${mediaType}. Check permissions.`);
       }
     } else {
-      producer.track?.stop();
-      await producer.pause();
+      producer.close();
+      producersRef.current[mediaType] = null;
+      
+      setMyStream(prevStream => {
+        if (!prevStream) return null;
+        const trackToRemove = prevStream.getTracks().find(t => t.kind === mediaType);
+        if (trackToRemove) {
+            trackToRemove.stop();
+            prevStream.removeTrack(trackToRemove);
+        }
+        return new MediaStream(prevStream.getTracks());
+      });
       if (mediaType === 'video') setIsVideoEnabled(false);
       if (mediaType === 'audio') setIsAudioEnabled(false);
     }
-  }, [myStream]);
+  }, []);
 
   return {
     myStream,

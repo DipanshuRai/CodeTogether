@@ -1,8 +1,6 @@
-import { rooms, socketToRoomMap, initializeRoomState, cleanupRoom, roomAwarenessStates } from './state.js';
+import { rooms, socketToRoomMap, initializeRoomState, cleanupRoom } from './state.js';
 import { createRouter } from './mediasoup.js';
-import { applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness';
 
-// Notifies all clients in a room about the current user list
 const sendUpdatedUserList = (io, roomId) => {
     if (rooms[roomId]) {
         const userList = Array.from(rooms[roomId].users.entries()).map(([id, name]) => ({ id, name }));
@@ -10,7 +8,6 @@ const sendUpdatedUserList = (io, roomId) => {
     }
 };
 
-// Handles the logic for when a user leaves a room or disconnects
 const handleLeaveRoom = (io, socket) => {
     const roomId = socketToRoomMap.get(socket.id);
     if (!roomId || !rooms[roomId]) return;
@@ -23,14 +20,6 @@ const handleLeaveRoom = (io, socket) => {
     if (room.peers[socket.id]) {
         room.peers[socket.id].transports.forEach(transport => transport.close());
         delete room.peers[socket.id];
-    }
-    
-    const awareness = roomAwarenessStates.get(roomId);
-    if (awareness) {
-        const states = awareness.getStates();
-        if (states.has(socket.id)) {
-            applyAwarenessUpdate(awareness, encodeAwarenessUpdate(awareness, [socket.id], new Map()), null);
-        }
     }
 
     room.users.delete(socket.id);
@@ -49,7 +38,6 @@ const handleLeaveRoom = (io, socket) => {
     }
 };
 
-// Initializes all room-related event listeners for a given socket
 export const initializeRoomHandlers = (io, socket) => {
     socket.on("create-room", async (roomId, name, callback) => {
         if (rooms[roomId]) {
@@ -63,9 +51,11 @@ export const initializeRoomHandlers = (io, socket) => {
             initializeRoomState(roomId, router);
             rooms[roomId].users.set(socket.id, name);
             rooms[roomId].peers[socket.id] = { transports: [], producers: [], consumers: [] };
+            
+            const currentUserList = Array.from(rooms[roomId].users.entries()).map(([id, name]) => ({ id, name }));
 
             console.log(`User ${name} created and joined room ${roomId}`);
-            callback({ success: true, roomId, message: "Room created" });
+            callback({ success: true, roomId, message: "Room created", users: currentUserList });
             sendUpdatedUserList(io, roomId);
         } catch (error) {
             console.error("Error creating room:", error);
@@ -85,7 +75,15 @@ export const initializeRoomHandlers = (io, socket) => {
 
         console.log(`User ${name} joined room ${roomId}`);
         socket.to(roomId).emit("user-joined", { socketId: socket.id, name });
-        callback({ success: true, roomId, message: "Room joined" });
+        
+        const currentUserList = Array.from(rooms[roomId].users.entries()).map(([id, name]) => ({ id, name }));
+        callback({ 
+            success: true, 
+            roomId, 
+            message: "Room joined",
+            users: currentUserList 
+        });
+        
         sendUpdatedUserList(io, roomId);
     });
 
