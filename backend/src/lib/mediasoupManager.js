@@ -1,7 +1,7 @@
 import { rooms, socketToRoomMap } from './state.js';
 
 // Initializes all Mediasoup-related event listeners for a given socket
-export const initializeMediasoupHandlers = (socket) => {
+export const initializeMediasoupHandlers = (io, socket) => {
     socket.on("get-router-rtp-capabilities", (roomId, callback) => {
         const router = rooms[roomId]?.router;
         if (router) callback(router.rtpCapabilities);
@@ -62,7 +62,7 @@ export const initializeMediasoupHandlers = (socket) => {
                 }
             });
             callback({ id: producer.id });
-            socket.to(roomId).emit("new-producer", { producerId: producer.id, socketId: socket.id, kind: producer.kind, type: appData?.type });
+            io.to(roomId).emit("new-producer", { producerId: producer.id, socketId: socket.id, kind: producer.kind, type: appData?.type });
         } catch (error) {
             callback({ error: error.message });
         }
@@ -87,5 +87,20 @@ export const initializeMediasoupHandlers = (socket) => {
     socket.on("resume-consumer", async ({ consumerId }) => {
         const consumer = rooms[socketToRoomMap.get(socket.id)]?.peers[socket.id]?.consumers.find(c => c.id === consumerId);
         if (consumer) await consumer.resume();
+    });
+
+    socket.on('close-producer', ({ producerId }) => {
+        const roomId = socketToRoomMap.get(socket.id);
+        if (!roomId || !rooms[roomId]) return;
+
+        const peer = rooms[roomId].peers[socket.id];
+        if (!peer) return;
+
+        const producer = peer.producers.find(p => p.id === producerId);
+        if (producer) {
+            producer.close();
+            peer.producers = peer.producers.filter(p => p.id !== producerId);
+        }
+        io.to(roomId).emit('specific-producer-closed', { producerId });
     });
 };

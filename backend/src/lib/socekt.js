@@ -35,7 +35,7 @@ io.on("connect", (socket) => {
 
   // Initialize all handlers for the connected socket
   initializeRoomHandlers(io, socket);
-  initializeMediasoupHandlers(socket);
+  initializeMediasoupHandlers(io, socket);
   initializeYjsHandlers(socket);
 });
 

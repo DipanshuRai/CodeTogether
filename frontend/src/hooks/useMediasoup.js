@@ -28,8 +28,6 @@ export const useMediasoup = (socket, roomId, name, action) => {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
 
-  console.log("Users: ", users);
-
   // Mediasoup-specific refs
   const deviceRef = useRef(null);
   const sendTransportRef = useRef(null);
@@ -43,7 +41,14 @@ export const useMediasoup = (socket, roomId, name, action) => {
     
     try {
       const { consumer, stream } = await consumeStream(socket, deviceRef.current, recvTransportRef.current, producerId, deviceRef.current.rtpCapabilities);
-      consumersRef.current.set(consumer.id, consumer);
+      // consumersRef.current.set(consumer.id, consumer);
+
+      consumersRef.current.set(consumer.id, {
+        consumer,
+        socketId,
+        kind,
+        type,
+      });
 
       consumer.on("producerclose", () => {
         consumersRef.current.delete(consumer.id);
@@ -100,13 +105,43 @@ export const useMediasoup = (socket, roomId, name, action) => {
     const handleNewProducer = ({ producerId, socketId, kind, type }) => handleConsumeStream(producerId, socketId, kind, type);
     const handleProducerClosed = ({ socketId }) => setRemoteStreams(prev => { const ns = { ...prev }; delete ns[socketId]; return ns; });
     const handleSpecificProducerClosed = ({ producerId }) => {
-      for (const consumer of consumersRef.current.values()) {
-        if (consumer.producerId === producerId) {
-          consumer.close();
+      // for (const consumer of consumersRef.current.values()) {
+      //   if (consumer.producerId === producerId) {
+      //     consumer.close();
+      //     break;
+      //   }
+      // }
+
+      let consumerInfoToDelete = null;
+      // Find the consumer's info object using the producerId
+      for (const [consumerId, consumerInfo] of consumersRef.current.entries()) {
+        if (consumerInfo.consumer.producerId === producerId) {
+          consumerInfoToDelete = { consumerId, ...consumerInfo };
           break;
         }
       }
+      if (!consumerInfoToDelete) {
+        return;
+      }
+      const { consumerId, consumer, socketId, kind, type } = consumerInfoToDelete;
+
+      consumer.close();
+      consumersRef.current.delete(consumerId);
+
+      setRemoteStreams(prev => {
+        const newStreams = { ...prev };
+        if (newStreams[socketId]) {
+          const streamType = type === 'screen' ? 'screen' : kind;          
+          delete newStreams[socketId][streamType];
+          
+          if (Object.keys(newStreams[socketId]).length === 0) {
+            delete newStreams[socketId];
+          }
+        }
+        return newStreams;
+      });
     };
+
     const handleUserListUpdate = userList => setUsers(userList.filter(u => u.id !== socket.id));
     const handleNewUser = ({ name }) => toast(`${name} joined the room.`);
     const handleUserLeft = ({ name }) => toast(`${name} left the room.`);
@@ -154,6 +189,7 @@ export const useMediasoup = (socket, roomId, name, action) => {
     if (!sendTransportRef.current) return toast.error("Media server not connected.");
 
     if (isScreenSharing) {
+      socket.emit('close-producer', { producerId: producersRef.current.screen.id });
       producersRef.current.screen?.close();
       producersRef.current.screen = null;
       screenStreamRef.current?.getTracks().forEach(track => track.stop());
@@ -222,6 +258,7 @@ export const useMediasoup = (socket, roomId, name, action) => {
         toast.error(`Could not start ${mediaType}. Check permissions.`);
       }
     } else {
+      socket.emit('close-producer', { producerId: producer.id });
       producer.close();
       producersRef.current[mediaType] = null;
       
@@ -231,6 +268,9 @@ export const useMediasoup = (socket, roomId, name, action) => {
         if (trackToRemove) {
             trackToRemove.stop();
             prevStream.removeTrack(trackToRemove);
+        }
+        if (prevStream.getTracks().length === 0) {
+          return null; 
         }
         return new MediaStream(prevStream.getTracks());
       });
