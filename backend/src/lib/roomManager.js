@@ -65,9 +65,27 @@ export const initializeRoomHandlers = (io, socket) => {
 
     socket.on("join-room", (roomId, name, callback) => {
         if (!rooms[roomId]) return callback({ success: false, message: "Room not found." });
-        if (socketToRoomMap.has(socket.id)) {
+        // if (socketToRoomMap.has(socket.id)) {
+        //     handleLeaveRoom(io, socket);
+        // }
+
+        const currentRoomId = socketToRoomMap.get(socket.id);
+
+        if (currentRoomId === roomId) {
+            console.log(`User ${name} (${socket.id}) sent a redundant join request for the same room ${roomId}.`);
+            const currentUserList = Array.from(rooms[roomId].users.entries()).map(([id, name]) => ({ id, name }));
+            return callback({ 
+                success: true, 
+                roomId, 
+                message: "Already in room",
+                users: currentUserList 
+            });
+        }
+        // If the user is in a different room, make them leave that one first.
+        if (currentRoomId) {
             handleLeaveRoom(io, socket);
         }
+        
         socket.join(roomId);
         socketToRoomMap.set(socket.id, roomId);
         rooms[roomId].users.set(socket.id, name);

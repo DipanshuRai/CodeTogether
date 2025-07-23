@@ -49,13 +49,10 @@ const CodeEditor = () => {
   };
 
   const { updateCollabLanguage } = useYjs({
-    socket,
     roomId,
-    user: auth?.user,
     editorRef,
-    language,
     onLanguageChange,
-    enabled: !isSolo && auth?.user
+    enabled: !isSolo && !!auth.user,
   });
 
   const handleLanguageSelect = useCallback((lang) => {
@@ -69,13 +66,9 @@ const CodeEditor = () => {
     }
   },[language,isSolo]);
 
-  // After confirmation, this function executes the appropriate change
   const handleConfirmChange = useCallback(() => {
     if (!targetLanguage) return;
-
     updateCollabLanguage(targetLanguage);
-    setLanguage(targetLanguage);
-    
     setIsModalOpen(false);
     setTargetLanguage(null);
   },[targetLanguage, updateCollabLanguage]);
@@ -91,8 +84,7 @@ const CodeEditor = () => {
 
   const handleToggleAudio = useCallback(() => toggleMedia("audio"), [toggleMedia]);
   const handleToggleVideo = useCallback(() => toggleMedia("video"), [toggleMedia]);
-  
-  // Effect to manage the slide-in animation for the right-hand view
+
   useEffect(() => {
     if (activeView === "whiteboard" || activeView === "io") {
       setIsViewVisible(false);
@@ -168,8 +160,8 @@ const CodeEditor = () => {
                   wordWrap: 'on',
                   automaticLayout: true,
                   padding: {
-                      top: 10,
-                      bottom: 10
+                    top: 10,
+                    bottom: 10
                   },
                   formatOnPaste: true,
                   mouseWheelZoom: true,
@@ -192,7 +184,7 @@ const CodeEditor = () => {
               screenStream={screenStream}
               remoteStreams={remoteStreams} 
               users={users}
-              isVideoEnabled={isVideoEnabled} 
+              isVideoEnabled={isVideoEnabled}
               auth={auth}
             />
           )}

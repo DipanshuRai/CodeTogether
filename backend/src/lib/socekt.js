@@ -1,12 +1,11 @@
 import express from "express";
 import http from "http";
-import { Server } from "socket.io";
+import { Server as SocketIOServer } from "socket.io";
 import dotenv from "dotenv";
-import cors from 'cors';
+import cors from "cors";
 
 import { initializeRoomHandlers } from './roomManager.js';
 import { initializeMediasoupHandlers } from './mediasoupManager.js';
-import { initializeYjsHandlers } from './yjsManager.js';
 
 dotenv.config();
 
@@ -20,7 +19,7 @@ app.use(cors({
     credentials: true
 }));
 
-const io = new Server(server, {
+const io = new SocketIOServer(server, {
   cors: {
     origin: corsOrigin,
     methods: ['GET', 'POST'],
@@ -31,12 +30,11 @@ const io = new Server(server, {
 
 // Main connection handler
 io.on("connect", (socket) => {
-  console.log(`User connected: ${socket.id}`);
+  console.log(`User connected with socket.io: ${socket.id}`);
 
   // Initialize all handlers for the connected socket
   initializeRoomHandlers(io, socket);
   initializeMediasoupHandlers(io, socket);
-  initializeYjsHandlers(socket);
 });
 
 export { app, io, server };

@@ -101,7 +101,7 @@ const EditorHeader = ({
             {activeView === "io" ? (
               <>
                 <PiPencilCircleFill size={20} />
-                <span>Whiteboard</span>
+                <span>Canvas</span>
               </>
             ) : (
               <>

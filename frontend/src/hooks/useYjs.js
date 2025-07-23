@@ -1,14 +1,18 @@
 import { useEffect, useCallback, useRef } from 'react';
 import * as Y from 'yjs';
 import { MonacoBinding } from 'y-monaco';
+import { WebsocketProvider } from 'y-websocket';
 import { CODE_SNIPPETS } from '../utils/constants';
+import debounce from 'lodash/debounce';
 
-export const useYjs = ({ socket, roomId, editorRef, onLanguageChange, enabled = true }) => {
+const YJS_WEBSOCKET_URL = import.meta.env.VITE_YJS_WEBSOCKET_URL || 'ws://localhost:1234';
+
+export const useYjs = ({ roomId, editorRef, onLanguageChange, enabled = true }) => {
+    const providerRef = useRef(null);
     const yDocRef = useRef(null);
     const monacoBindingRef = useRef(null);
     const isInitializedRef = useRef(false);
 
-    // Function to change the language and code content for all users
     const updateCollabLanguage = useCallback((newLanguage) => {
         const yDoc = yDocRef.current;
         if (!yDoc || !enabled) return;
@@ -16,13 +20,11 @@ export const useYjs = ({ socket, roomId, editorRef, onLanguageChange, enabled = 
         try {
             const yText = yDoc.getText("monaco");
             const yMetadata = yDoc.getMap("metadata");
+            const newCode = CODE_SNIPPETS[newLanguage] || "";            
 
-            const newCode = CODE_SNIPPETS[newLanguage] || "";
-            
             yDoc.transact(() => {
                 yText.delete(0, yText.length);
                 yText.insert(0, newCode);
-                
                 yMetadata.set('language', newLanguage);
             });
         } catch (error) {
@@ -31,19 +33,22 @@ export const useYjs = ({ socket, roomId, editorRef, onLanguageChange, enabled = 
     }, [enabled]);
 
     useEffect(() => {
-        if (!enabled || !socket || !editorRef.current || isInitializedRef.current) {
+        if (!enabled || !editorRef.current || isInitializedRef.current) {
             return;
         }
 
-        let isDestroyed = false;
-        
+        let cleanup = () => {};
+
         const initialize = () => {
             if (isInitializedRef.current || !editorRef.current?.getModel()) return;
-            
+
             isInitializedRef.current = true;
-            
+
             const yDoc = new Y.Doc();
             yDocRef.current = yDoc;
+
+            const provider = new WebsocketProvider(YJS_WEBSOCKET_URL, roomId, yDoc);
+            providerRef.current = provider;
 
             const yText = yDoc.getText("monaco");
             const yMetadata = yDoc.getMap("metadata");
@@ -51,81 +56,64 @@ export const useYjs = ({ socket, roomId, editorRef, onLanguageChange, enabled = 
             monacoBindingRef.current = new MonacoBinding(
                 yText,
                 editorRef.current.getModel(),
-                new Set([editorRef.current])
+                new Set([editorRef.current]),
+                provider.awareness 
             );
-                        
-            // Send local document changes to the server
-            const onDocUpdate = (update, origin) => {
-                if (!isDestroyed && origin !== socket) {
-                    socket.emit('crdt:update', roomId, update);
-                }
-            };
 
-            // Apply remote document changes from the server
-            const onRemoteDocUpdate = (update) => {
-                if (!isDestroyed) {
-                    Y.applyUpdate(yDoc, new Uint8Array(update), socket);
-                }
-            };
-            
-            // Listen for changes to the language in the shared metadata
             const onMetadataChange = (event) => {
-                if (!isDestroyed && event.keysChanged.has('language')) {
+                if (event.keysChanged.has('language')) {
                     const newLanguage = yMetadata.get('language');
-                    
                     if (newLanguage && typeof onLanguageChange === 'function') {
                         onLanguageChange(newLanguage);
                     }
                 }
             };
 
-            // Bind handlers
-            yDoc.on('update', onDocUpdate);
-            socket.on('crdt:update', onRemoteDocUpdate);
             yMetadata.observe(onMetadataChange);
 
-            socket.emit('crdt:get-state', roomId, (initialState) => {
-                if (isDestroyed) return;
-                
-                if (initialState) {
-                    Y.applyUpdate(yDoc, new Uint8Array(initialState));
-                }
+            const debouncedLog = debounce((code) => {
+                console.log('Final editor content:', code);
+            }, 200);
 
-                if (yText.length === 0) {
+            editorRef.current?.onDidChangeModelContent(() => {
+                debouncedLog(editorRef.current.getValue());
+            });
+
+            yText.observe(() => {
+                console.log('Shared document state:', yText.toString());
+            });
+
+            provider.on('sync', (isSynced) => {
+                if (isSynced && yText.length === 0) {
                     const initialLanguage = 'cpp';
                     const initialCode = CODE_SNIPPETS[initialLanguage] || "";
-                    yText.insert(0, initialCode);
-                    yMetadata.set('language', initialLanguage);
+                    yDoc.transact(() => {
+                        yText.insert(0, initialCode);
+                        yMetadata.set('language', initialLanguage);
+                    });
                 }
             });
-            
-            // Store cleanup function
-            return () => {
-                isDestroyed = true;
-                
-                yDoc.off('update', onDocUpdate);
-                socket.off('crdt:update', onRemoteDocUpdate);
+
+            cleanup = () => {
                 yMetadata.unobserve(onMetadataChange);
-                
-                monacoBindingRef.current?.destroy();
+                provider.disconnect();
+                if (monacoBindingRef.current) {
+                    monacoBindingRef.current.destroy();
+                }
                 yDoc.destroy();
-                
                 isInitializedRef.current = false;
             };
         };
 
-        let cleanup;
+        // Delay initialization to ensure the editor is fully mounted
+        const timer = setTimeout(initialize, 100);
 
-        const timer = setTimeout(() => {
-            cleanup = initialize();
-        }, 100);
-        
         return () => {
             clearTimeout(timer);
-            if(cleanup) cleanup();
+            cleanup();
         };
 
-    }, [enabled, socket, roomId, editorRef, onLanguageChange]);
+    }, [enabled, roomId, editorRef, onLanguageChange]);
 
     return { updateCollabLanguage };
 };

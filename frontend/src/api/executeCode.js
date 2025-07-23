@@ -35,8 +35,6 @@ export const executeCode = async (language, sourceCode, stdin="") => {
 
     const response = await axios.post(import.meta.env.VITE_PISTON_API_URL, payload);
 
-    console.log(response);
-
     return response.data;
   } catch (error) {
     if (error.response) {
