@@ -8,7 +8,6 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-/* The actual <video> element and the placeholder div */
 .video-player,
 .video-placeholder {
   position: absolute;

@@ -42,7 +42,7 @@ const CodeEditor = () => {
   const [targetLanguage, setTargetLanguage] = useState(null);
   const [language, setLanguage] = useState("cpp");
 
-  const isSolo = roomId === "solo";
+  const isSolo = roomId === "solo";  
 
   const onLanguageChange=(newLanguage)=>{
     setLanguage(newLanguage);
@@ -56,22 +56,32 @@ const CodeEditor = () => {
   });
 
   const handleLanguageSelect = useCallback((lang) => {
-    if (lang !== language) {
+    if (lang === language) return;
+    const editor = editorRef.current;
+    const isEditorEmpty = !editor || editor.getValue().trim() === '';
+
+    if (isEditorEmpty) {
       if (isSolo) {
         setLanguage(lang);
       } else {
-        setTargetLanguage(lang);
-        setIsModalOpen(true);
+        updateCollabLanguage(lang);
       }
+    } else {
+      setTargetLanguage(lang);
+      setIsModalOpen(true);
     }
-  },[language,isSolo]);
+  }, [language, isSolo, updateCollabLanguage]);
 
   const handleConfirmChange = useCallback(() => {
     if (!targetLanguage) return;
-    updateCollabLanguage(targetLanguage);
+    if (isSolo) {
+      setLanguage(targetLanguage);
+    } else {
+      updateCollabLanguage(targetLanguage);
+    }
     setIsModalOpen(false);
     setTargetLanguage(null);
-  },[targetLanguage, updateCollabLanguage]);
+  },[targetLanguage, isSolo, updateCollabLanguage]);
 
   const handleCancelChange = useCallback(() => {
     setIsModalOpen(false);
@@ -108,16 +118,18 @@ const CodeEditor = () => {
 
   return (
     <div className="code-editor-layout">
-      {!isSolo && (
-        <Modal
-          isOpen={isModalOpen}
-          onClose={handleCancelChange}
-          onConfirm={handleConfirmChange}
-          title="Change Language?"
-        >
-          <p>This will replace the current code in the editor for everyone. Are you sure?</p>
-        </Modal>
-      )}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCancelChange}
+        onConfirm={handleConfirmChange}
+        title="Change Language?"
+      >
+        <p>
+          {isSolo
+            ? "This will replace the current code in the editor. Are you sure?"
+            : "This will replace the current code in the editor for everyone. Are you sure?"}
+        </p>
+      </Modal>
 
       <EditorHeader
         language={language}

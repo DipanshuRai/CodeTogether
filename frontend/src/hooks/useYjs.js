@@ -2,7 +2,6 @@ import { useEffect, useCallback, useRef } from 'react';
 import * as Y from 'yjs';
 import { MonacoBinding } from 'y-monaco';
 import { WebsocketProvider } from 'y-websocket';
-import { CODE_SNIPPETS } from '../utils/constants';
 import debounce from 'lodash/debounce';
 
 const YJS_WEBSOCKET_URL = import.meta.env.VITE_YJS_WEBSOCKET_URL || 'ws://localhost:1234';
@@ -20,11 +19,9 @@ export const useYjs = ({ roomId, editorRef, onLanguageChange, enabled = true }) 
         try {
             const yText = yDoc.getText("monaco");
             const yMetadata = yDoc.getMap("metadata");
-            const newCode = CODE_SNIPPETS[newLanguage] || "";            
 
             yDoc.transact(() => {
                 yText.delete(0, yText.length);
-                yText.insert(0, newCode);
                 yMetadata.set('language', newLanguage);
             });
         } catch (error) {
@@ -57,7 +54,7 @@ export const useYjs = ({ roomId, editorRef, onLanguageChange, enabled = true }) 
                 yText,
                 editorRef.current.getModel(),
                 new Set([editorRef.current]),
-                provider.awareness 
+                provider.awareness
             );
 
             const onMetadataChange = (event) => {
@@ -84,13 +81,11 @@ export const useYjs = ({ roomId, editorRef, onLanguageChange, enabled = true }) 
             });
 
             provider.on('sync', (isSynced) => {
-                if (isSynced && yText.length === 0) {
-                    const initialLanguage = 'cpp';
-                    const initialCode = CODE_SNIPPETS[initialLanguage] || "";
-                    yDoc.transact(() => {
-                        yText.insert(0, initialCode);
-                        yMetadata.set('language', initialLanguage);
-                    });
+                if (isSynced) {
+                  const yMetadata = yDocRef.current.getMap("metadata");
+                  if(!yMetadata.get('language')){
+                    yMetadata.set('language', 'cpp');
+                  }
                 }
             });
 
@@ -105,7 +100,6 @@ export const useYjs = ({ roomId, editorRef, onLanguageChange, enabled = true }) 
             };
         };
 
-        // Delay initialization to ensure the editor is fully mounted
         const timer = setTimeout(initialize, 100);
 
         return () => {
