@@ -58,7 +58,7 @@ export const refreshAccessToken = async (req, res) => {
 
     const options = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "None",
     };
 
@@ -118,7 +118,7 @@ export const signup = async (req, res) => {
 
     const options = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "None",
     };
 
@@ -159,7 +159,7 @@ export const login = async(req, res) => {
 
     const options = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "None",
     };
     
@@ -211,7 +211,7 @@ export const googleLogin = async (req, res) => {
 
     const options = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "None",
     };
 
@@ -237,8 +237,8 @@ export const logout = async(req, res) => {
     await User.findByIdAndUpdate(req.user._id, { $set: { refreshToken: undefined }})
 
     const options={
-      httpOnly:true,
-      secure:true,
+      httpOnly: true,
+      secure: true,
       sameSite: "None",
     }
 
