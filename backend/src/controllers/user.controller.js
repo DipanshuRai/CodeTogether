@@ -59,14 +59,13 @@ export const refreshAccessToken = async (req, res) => {
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      sameSite: "None",
     };
 
     return res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, {...options, maxAge: 7 * 24 * 60 * 60 * 1000})
+      .cookie("accessToken", accessToken, { ...options, maxAge: 15 * 60 * 1000 })
+      .cookie("refreshToken", refreshToken, { ...options, maxAge: 7 * 24 * 60 * 60 * 1000 })
       .json({
         user,
         success: true,
@@ -120,14 +119,13 @@ export const signup = async (req, res) => {
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      sameSite: "None",
     };
 
     return res
       .status(201)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, {...options, maxAge: 7 * 24 * 60 * 60 * 1000})
+      .cookie("accessToken", accessToken, { ...options, maxAge: 15 * 60 * 1000 })
+      .cookie("refreshToken", refreshToken, { ...options, maxAge: 7 * 24 * 60 * 60 * 1000 })
       .json({
         newUser,
         success: true,
@@ -162,14 +160,13 @@ export const login = async(req, res) => {
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
+      sameSite: "None",
     };
     
     res
     .status(200)
-    .cookie("accessToken", accessToken, {...options, maxAge: 15 * 60 * 1000}) // 15m
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, { ...options, maxAge: 15 * 60 * 1000 }) // 15m
+    .cookie("refreshToken", refreshToken, { ...options, maxAge: 7 * 24 * 60 * 60 * 1000 })
     .json({
       success: true,
       message: "Logged in successfully",
@@ -215,7 +212,7 @@ export const googleLogin = async (req, res) => {
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      sameSite: "None",
     };
 
     return res
@@ -242,7 +239,7 @@ export const logout = async(req, res) => {
     const options={
       httpOnly:true,
       secure:true,
-      sameSite: "Strict",
+      sameSite: "None",
     }
 
     return res
