@@ -37,7 +37,7 @@
 }
 
 .draw-section {
-    background: linear-gradient(135deg, rgba(10, 10, 10, 0.796), rgba(18, 18, 18, 1)),
+    background: linear-gradient(135deg, rgba(10, 10, 10, 0.582), rgba(18, 18, 18, 1)),
               url('/whiteboard-bg.png') center center/cover no-repeat;
 }
 

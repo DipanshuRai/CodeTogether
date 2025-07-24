@@ -55,7 +55,7 @@ const Login = () => {
     setIsGoogleLoading(true);
     try {
       const googleUser = await axios.get(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
+        import.meta.env.VITE_GOOGLE_LOGIN_API,
         {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         }
