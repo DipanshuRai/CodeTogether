@@ -1,5 +1,5 @@
 import { NavLink, useNavigate, useParams } from "react-router-dom";
-import { piston } from "../api/piston.js";
+import { Piston } from "../api/piston.js";
 import LanguageSelector from "./LanguageSelector";
 import {
   FaPlay,
@@ -46,7 +46,7 @@ const EditorHeader = ({
     if (!sourceCode) return;
     try {
       setIsLoading(true);
-      const { run: result } = await piston(language, sourceCode, input);
+      const { run: result } = await Piston(language, sourceCode, input);
       setOutput(result.output.split("\n"));
       result.stderr ? setIsError(true) : setIsError(false);
     } catch (error) {
