@@ -17,6 +17,9 @@
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
+    "@liveblocks/client": "^3.2.0",
+    "@liveblocks/react": "^3.2.0",
+    "@liveblocks/yjs": "^3.2.0",
     "@monaco-editor/react": "^4.6.0",
     "@react-oauth/google": "^0.12.2",
     "allotment": "^1.20.4",
@@ -39,6 +42,7 @@
     "spinner": "^0.3.4",
     "y-monaco": "^0.1.6",
     "y-protocols": "^1.0.6",
+    "y-webrtc": "^10.3.0",
     "y-websocket": "^3.0.0",
     "yjs": "^13.6.27"
   },

@@ -4,6 +4,11 @@
   font-family: sans-serif;
 }
 
+.language-selector-custom.disabled .selector-button {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .selector-button {
   display: flex;
   align-items: center;

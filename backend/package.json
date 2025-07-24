@@ -6,13 +6,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
-    "y-websocket": "npx y-websocket"
+    "start": "node src/index.js"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@liveblocks/node": "^3.2.0",
     "@y/websocket-server": "^0.1.1",
     "bcryptjs": "^3.0.2",
     "cookie": "^1.0.2",
@@ -20,6 +20,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-ws": "^5.0.2",
     "jsonwebtoken": "^9.0.2",
     "mediasoup": "^3.16.6",
     "mongoose": "^8.16.0",
@@ -29,7 +30,8 @@
     "socket.io": "^4.8.1",
     "ws": "^8.18.3",
     "y-protocols": "^1.0.6",
-    "y-websocket": "^3.0.0",
+    "y-webrtc": "^10.3.0",
+    "y-websocket": "1.4.5",
     "yjs": "^13.6.27"
   }
 }

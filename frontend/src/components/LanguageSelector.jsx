@@ -6,7 +6,7 @@ import "./styles/LanguageSelector.css";
 
 const languages = Object.entries(LANGUAGE_VERSIONS);
 
-const LanguageSelector = ({ onSelect, selectedLanguage }) => {
+const LanguageSelector = ({ onSelect, selectedLanguage, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectorRef = useRef(null);
 
@@ -30,8 +30,13 @@ const LanguageSelector = ({ onSelect, selectedLanguage }) => {
   const SelectedIcon = LANGUAGE_ICONS[selectedLanguage] || DEFAULT_ICON;
 
   return (
-    <div className="language-selector-custom" ref={selectorRef}>
-      <button className="selector-button" onClick={() => setIsOpen(!isOpen)}>
+    <div className={`language-selector-custom ${disabled ? 'disabled' : ''}`} ref={selectorRef}>
+      <button
+        className="selector-button"
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={disabled}
+        title={disabled ? "Loading" : ""}
+      >
         <div className="selected-option">
           <SelectedIcon className="selector-icon" />
           <span>{selectedLanguage}</span>

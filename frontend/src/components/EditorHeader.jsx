@@ -1,5 +1,5 @@
 import { NavLink, useNavigate, useParams } from "react-router-dom";
-import { executeCode } from "../api/executeCode.js";
+import { piston } from "../api/piston.js";
 import LanguageSelector from "./LanguageSelector";
 import {
   FaPlay,
@@ -36,6 +36,7 @@ const EditorHeader = ({
   onViewChange,
   isScreenSharing,
   onToggleScreenShare,
+  isLanguageSelectorDisabled,
 }) => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ const EditorHeader = ({
     if (!sourceCode) return;
     try {
       setIsLoading(true);
-      const { run: result } = await executeCode(language, sourceCode, input);
+      const { run: result } = await piston(language, sourceCode, input);
       setOutput(result.output.split("\n"));
       result.stderr ? setIsError(true) : setIsError(false);
     } catch (error) {
@@ -83,7 +84,11 @@ const EditorHeader = ({
       </div>
 
       <div className="header-section header-center">
-        <LanguageSelector selectedLanguage={language} onSelect={onSelect} />
+        <LanguageSelector
+          selectedLanguage={language}
+          onSelect={onSelect}
+          disabled={isLanguageSelectorDisabled}
+        />
         <button className="action-btn run-button" onClick={runCode} disabled={isLoading}>
           <FaPlay size={15} />
           <span>{isLoading ? "Running..." : "Run Code"}</span>
@@ -91,11 +96,7 @@ const EditorHeader = ({
         <button
           className="action-btn board-btn"
           onClick={() => onViewChange(activeView === "io" ? "whiteboard" : "io")}
-          title={
-            activeView === "io"
-              ? "Switch to Whiteboard"
-              : "Switch to Input/Output"
-          }
+          title={activeView === "io" ? "Switch to Whiteboard" : "Switch to Input/Output"}
         >
           <div key={activeView} className="btn-content-animated">
             {activeView === "io" ? (
