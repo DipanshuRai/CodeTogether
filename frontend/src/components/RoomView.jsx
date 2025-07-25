@@ -4,10 +4,6 @@ import './styles/RoomView.css';
 
 const RoomView = ({ myStream, screenStream, remoteStreams, users, auth, isVideoEnabled }) => {
 
-  console.log("MyStream: ",myStream);
-  console.log("MyScreenStream: ",screenStream);
-  console.log("RemoteStream: ",remoteStreams);
-
   const [fullscreenInfo, setFullscreenInfo] = useState(null);
   const fullscreenContainerRef = useRef(null);
 

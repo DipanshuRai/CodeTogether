@@ -18,6 +18,15 @@ import { IoExit } from "react-icons/io5";
 import toast from "react-hot-toast";
 import "./styles/EditorHeader.css";
 
+const renderLimitToast = () => {
+  toast.error(
+    "Server is running on Render.com, which doesn’t support the UDP-based media transport. " +
+    "You won’t be able to see or hear other users’ video/audio or screen sharing."
+    ,
+    { duration: 15000 }
+  );
+};
+
 const EditorHeader = ({
   language,
   onSelect,
@@ -73,6 +82,19 @@ const EditorHeader = ({
     }
   };
 
+  const handleAudioToggle = () => {
+    if (!isAudioEnabled) renderLimitToast();
+    toggleAudio();
+  };
+  const handleVideoToggle = () => {
+    if (!isVideoEnabled) renderLimitToast();
+    toggleVideo();
+  };
+  const handleScreenShareToggle = () => {
+    if (!isScreenSharing) renderLimitToast();
+    onToggleScreenShare();
+  };
+
   return (
     <header className="editor-header">
       <div className="header-section header-left">
@@ -120,17 +142,17 @@ const EditorHeader = ({
             <button className="control-btn" onClick={onToggleUsers} title="Toggle Users Panel">
               <FaUsers size={19} />
             </button>
-            <button onClick={onToggleScreenShare} className={`control-btn ${isScreenSharing ? "active" : ""}`} title={isScreenSharing ? "Stop Sharing" : "Share Screen"}>
+            <button onClick={handleScreenShareToggle} className={`control-btn ${isScreenSharing ? "active" : ""}`} title={isScreenSharing ? "Stop Sharing" : "Share Screen"}>
               <FaDesktop size={16} />
             </button>
             <button
-              onClick={toggleVideo}
+              onClick={handleVideoToggle}
               className={`control-btn ${!isVideoEnabled ? "disabled" : ""}`}
               title={isVideoEnabled ? "Turn off camera" : "Turn on camera"}
             >
               {isVideoEnabled ? <FaVideo size={16} /> : <FaVideoSlash size={16} />}
             </button>
-            <button onClick={toggleAudio} className={`control-btn ${!isAudioEnabled ? "disabled" : ""}`} title={isAudioEnabled ? "Mute" : "Unmute"}>
+            <button onClick={handleAudioToggle} className={`control-btn ${!isAudioEnabled ? "disabled" : ""}`} title={isAudioEnabled ? "Mute" : "Unmute"}>
               {isAudioEnabled ? <FaMicrophone size={16} /> : <FaMicrophoneSlash size={16} />}
             </button>
             <button className="control-btn" onClick={copyRoomID} title="Copy Room ID"><FaCopy size={15} /></button>
