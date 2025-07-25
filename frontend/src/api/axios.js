@@ -14,14 +14,12 @@ export const axiosPrivate=axios.create({
 
 // Attach the interceptor
 axiosPrivate.interceptors.response.use(
-  response => response, // return the response if no error
+  response => response,
   async error => {
     const originalRequest = error.config;
 
     // Check if the failed request was for the refresh token endpoint ***
     if (originalRequest.url === '/api/auth/refresh-token') {
-        // If the refresh token request itself fails, we can't recover.
-        // Here you would typically handle logout logic.
         console.error("Refresh token is invalid or expired. Logging out.");
         return Promise.reject(error);
     }

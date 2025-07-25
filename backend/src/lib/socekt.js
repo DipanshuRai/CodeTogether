@@ -32,7 +32,6 @@ const io = new SocketIOServer(server, {
 io.on("connect", (socket) => {
   console.log(`User connected with socket.io: ${socket.id}`);
 
-  // Initialize all handlers for the connected socket
   initializeRoomHandlers(io, socket);
   initializeMediasoupHandlers(io, socket);
 });

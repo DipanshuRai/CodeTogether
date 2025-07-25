@@ -1,7 +1,5 @@
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { ReactSketchCanvas } from "react-sketch-canvas";
-import { FaCode } from "react-icons/fa";
 import { Pen, Eraser, Undo, Redo, Trash2, Download } from "lucide-react";
 import "./styles/Canvas.css";
 

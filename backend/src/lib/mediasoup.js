@@ -26,7 +26,7 @@ const createMediasoupWorker = async () => {
 
   worker.on("died", () => {
     console.error("mediasoup worker has died");
-    setTimeout(() => process.exit(1), 2000); // exit in 2 seconds
+    setTimeout(() => process.exit(1), 2000);
   });
 
   return worker;

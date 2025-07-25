@@ -112,6 +112,6 @@ This project would not be possible without the incredible open-source libraries 
 
 ## 📬 Contact
 
-Your Name: [dipanshurai933@gmail.com](mailto:dipanshurai933@gmail.com)
+Email: [dipanshurai933@gmail.com](mailto:dipanshurai933@gmail.com)
 
 LinkedIn: [https://www.linkedin.com/in/dipanshu-rai-1b913025b](https://www.linkedin.com/in/dipanshu-rai-1b913025b)
