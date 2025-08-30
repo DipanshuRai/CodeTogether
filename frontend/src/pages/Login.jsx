@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail, UserCheck } from "lucide-react";
 import { FaCode } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
@@ -12,8 +12,9 @@ import "./styles/Signup.css";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -24,17 +25,17 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsFormLoading(true);
 
     if (!formData.email.trim() || !formData.password.trim()) {
       toast.error("Both email and password are required.");
-      setIsLoading(false);
+      setIsFormLoading(false);
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       toast.error("Invalid email format.");
-      setIsLoading(false);
+      setIsFormLoading(false);
       return;
     }
 
@@ -47,7 +48,28 @@ const Login = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || "Login failed");
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setIsGuestLoading(true);
+    try {
+      const response = await axiosPrivate.post("/api/auth/login", {
+        email: "tester@gmail.com",
+        password: "pass123",
+      });
+      const { accessToken, user } = response.data;
+      setAuth({ accessToken, user });
+      toast.success("Logged in as Tester!");
+      navigate("/");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Guest login failed. The tester account may not be set up."
+      );
+    } finally {
+      setIsGuestLoading(false);
     }
   };
 
@@ -97,7 +119,9 @@ const Login = () => {
             <div className="title1">Code</div>
             <div className="title2">Together</div>
           </div>
-          <p className="subtitle">Welcome back! Please log in to your account.</p>
+          <p className="subtitle">
+            Welcome back! Please log in to your account.
+          </p>
         </div>
 
         <div className="input-group">
@@ -146,9 +170,9 @@ const Login = () => {
         <button
           type="submit"
           className="submit-btn"
-          disabled={isLoading || isGoogleLoading}
+          disabled={isFormLoading || isGoogleLoading || isGuestLoading}
         >
-          {isLoading ? <Loader2 className="spinner-icon" /> : "Log In"}
+          {isFormLoading ? <Loader2 className="spinner-icon" /> : "Log In"}
         </button>
 
         <div className="separator1">
@@ -159,9 +183,23 @@ const Login = () => {
 
         <button
           type="button"
+          className="guest-btn"
+          onClick={handleGuestLogin}
+          disabled={isFormLoading || isGoogleLoading || isGuestLoading}
+        >
+          {isGuestLoading ? (
+            <Loader2 className="spinner-icon" />
+          ) : (
+            <UserCheck className="guest-icon" />
+          )}
+          Login as Tester
+        </button>
+
+        <button
+          type="button"
           className="google-btn"
           onClick={() => googleLogin()}
-          disabled={isLoading || isGoogleLoading}
+          disabled={isFormLoading || isGoogleLoading || isGuestLoading}
         >
           {isGoogleLoading ? (
             <Loader2 className="spinner-icon" />
