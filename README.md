@@ -16,24 +16,6 @@
 
 ---
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Core Features](#-core-features)
-- [Quick Start](#-quick-start)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Installation](#-installation)
-- [Environment Variables](#-environment-variables)
-- [API Documentation](#-api-documentation)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Acknowledgments](#-acknowledgments)
-- [Contact](#-contact)
-
----
-
 ## Overview
 
 CodeTogether eliminates friction in remote software collaboration by consolidating multiple tools into a single, unified workspace. Whether you're conducting technical interviews, pair programming with distributed teams, or teaching coding concepts, CodeTogether provides everything you need.
