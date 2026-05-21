@@ -35,6 +35,9 @@ export const useMediasoup = (socket, roomId, name, action) => {
   const producersRef = useRef({ video: null, audio: null, screen: null });
   const consumersRef = useRef(new Map());
   const screenStreamRef = useRef(null);
+  // Mirror myStream as a ref so the unmount cleanup can stop tracks even if
+  // the effect closure captured a stale `myStream` value.
+  const myStreamRef = useRef(null);
 
   const handleConsumeStream = useCallback(async (producerId, socketId, kind, type) => {
     if (!deviceRef.current || !recvTransportRef.current?.id) return;
@@ -103,6 +106,7 @@ export const useMediasoup = (socket, roomId, name, action) => {
     };
 
     const handleNewProducer = ({ producerId, socketId, kind, type }) => handleConsumeStream(producerId, socketId, kind, type);
+    
     const handleProducerClosed = ({ socketId }) => setRemoteStreams(prev => { const ns = { ...prev }; delete ns[socketId]; return ns; });
     const handleSpecificProducerClosed = ({ producerId }) => {
       // for (const consumer of consumersRef.current.values()) {
@@ -170,10 +174,16 @@ export const useMediasoup = (socket, roomId, name, action) => {
     
     return () => {
       isMounted = false;
-      myStream?.getTracks().forEach(track => track.stop());
+      myStreamRef.current?.getTracks().forEach(track => track.stop());
+      myStreamRef.current = null;
       screenStreamRef.current?.getTracks().forEach(track => track.stop());
+      screenStreamRef.current = null;
       sendTransportRef.current?.close();
       recvTransportRef.current?.close();
+      sendTransportRef.current = null;
+      recvTransportRef.current = null;
+      consumersRef.current.clear();
+      producersRef.current = { video: null, audio: null, screen: null };
 
       socket.off("new-producer", handleNewProducer);
       socket.off("producer-closed", handleProducerClosed);
@@ -188,42 +198,53 @@ export const useMediasoup = (socket, roomId, name, action) => {
   const toggleScreenShare = useCallback(async () => {
     if (!sendTransportRef.current) return toast.error("Media server not connected.");
 
-    if (isScreenSharing) {
-      socket.emit('close-producer', { producerId: producersRef.current.screen.id });
-      producersRef.current.screen?.close();
+    const stopSharing = ({ silent = false } = {}) => {
+      const screenProducer = producersRef.current.screen;
+      if (screenProducer) {
+        socket.emit('close-producer', { producerId: screenProducer.id });
+        screenProducer.close();
+      }
       producersRef.current.screen = null;
       screenStreamRef.current?.getTracks().forEach(track => track.stop());
       screenStreamRef.current = null;
       setScreenStream(null);
       setIsScreenSharing(false);
-      toast.success("Screen sharing stopped");
+      if (!silent) toast.success("Screen sharing stopped");
+    };
+
+    if (isScreenSharing) {
+      stopSharing();
     } else {
       try {
         const captureStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const screenTrack = captureStream.getVideoTracks()[0];
         if (!screenTrack) throw new Error("No video track found");
 
+        // When user clicks the browser's "Stop sharing" button:
         screenTrack.addEventListener('ended', () => {
-          producersRef.current.screen?.close();
-          producersRef.current.screen = null;
-          setScreenStream(null);
-          setIsScreenSharing(false);
+          stopSharing({ silent: true });
           toast("Screen sharing ended");
         });
 
         screenStreamRef.current = captureStream;
         setScreenStream(captureStream);
-        const screenProducer = await sendTransportRef.current.produce({ track: screenTrack, encodings: SCREEN_SHARE_ENCODINGS, appData: { type: 'screen' } });
+        const screenProducer = await sendTransportRef.current.produce({
+          track: screenTrack,
+          encodings: SCREEN_SHARE_ENCODINGS,
+          appData: { type: 'screen' },
+        });
         producersRef.current.screen = screenProducer;
         setIsScreenSharing(true);
         toast.success("Screen sharing started");
       } catch (error) {
         if (error.name !== 'NotAllowedError') toast.error("Could not start screen sharing");
+        screenStreamRef.current?.getTracks().forEach(t => t.stop());
+        screenStreamRef.current = null;
         setIsScreenSharing(false);
         setScreenStream(null);
       }
     }
-  }, [isScreenSharing]);
+  }, [isScreenSharing, socket]);
 
   const toggleMedia = useCallback(async (mediaType) => {
     if (!sendTransportRef.current) {
@@ -245,10 +266,11 @@ export const useMediasoup = (socket, roomId, name, action) => {
         });
 
         producersRef.current[mediaType] = newProducer;
-            
+
         setMyStream(prevStream => {
           const newStream = prevStream ? new MediaStream(prevStream.getTracks()) : new MediaStream();
           newStream.addTrack(track);
+          myStreamRef.current = newStream;
           return newStream;
         });
         if (mediaType === 'video') setIsVideoEnabled(true);
@@ -261,23 +283,29 @@ export const useMediasoup = (socket, roomId, name, action) => {
       socket.emit('close-producer', { producerId: producer.id });
       producer.close();
       producersRef.current[mediaType] = null;
-      
+
       setMyStream(prevStream => {
-        if (!prevStream) return null;
+        if (!prevStream) {
+          myStreamRef.current = null;
+          return null;
+        }
         const trackToRemove = prevStream.getTracks().find(t => t.kind === mediaType);
         if (trackToRemove) {
             trackToRemove.stop();
             prevStream.removeTrack(trackToRemove);
         }
         if (prevStream.getTracks().length === 0) {
-          return null; 
+          myStreamRef.current = null;
+          return null;
         }
-        return new MediaStream(prevStream.getTracks());
+        const next = new MediaStream(prevStream.getTracks());
+        myStreamRef.current = next;
+        return next;
       });
       if (mediaType === 'video') setIsVideoEnabled(false);
       if (mediaType === 'audio') setIsAudioEnabled(false);
     }
-  }, []);
+  }, [socket]);
 
   return {
     myStream,

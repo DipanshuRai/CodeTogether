@@ -1,5 +1,5 @@
 import express from 'express';
-import { app, server } from './lib/socekt.js';
+import { app, server } from './lib/socket.js';
 import { connectDB } from './lib/db.js';
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser';

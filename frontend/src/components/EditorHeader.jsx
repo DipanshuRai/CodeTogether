@@ -18,15 +18,6 @@ import { IoExit } from "react-icons/io5";
 import toast from "react-hot-toast";
 import "./styles/EditorHeader.css";
 
-const renderLimitToast = () => {
-  toast.error(
-    "Server is running on Render.com, which doesn’t support the UDP-based media transport. " +
-    "You won’t be able to see or hear other users’ video/audio or screen sharing."
-    ,
-    { duration: 15000 }
-  );
-};
-
 const EditorHeader = ({
   language,
   onSelect,
@@ -83,15 +74,12 @@ const EditorHeader = ({
   };
 
   const handleAudioToggle = () => {
-    if (!isAudioEnabled) renderLimitToast();
     toggleAudio();
   };
   const handleVideoToggle = () => {
-    if (!isVideoEnabled) renderLimitToast();
     toggleVideo();
   };
   const handleScreenShareToggle = () => {
-    if (!isScreenSharing) renderLimitToast();
     onToggleScreenShare();
   };
 

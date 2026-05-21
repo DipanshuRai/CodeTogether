@@ -86,14 +86,17 @@ export const createRecvTransport = async (socket, device, roomId) => {
 };
 
 export const consumeStream = async (socket, device, transport, producerId, rtpCapabilities) => {
-    const { id, kind, rtpParameters, error } = await new Promise(resolve => {
+    const response = await new Promise(resolve => {
         socket.emit('consume', { producerId, rtpCapabilities, transportId: transport.id }, resolve);
     });
 
-    if (error) {
-        console.error('Cannot consume stream:', error);
-        throw new Error(error);
+    if (!response || response.error) {
+        const message = response?.error || 'Unknown consume error';
+        console.error('Cannot consume stream:', message);
+        throw new Error(message);
     }
+
+    const { id, kind, rtpParameters } = response;
 
     const consumer = await transport.consume({
         id,
@@ -102,6 +105,7 @@ export const consumeStream = async (socket, device, transport, producerId, rtpCa
         rtpParameters,
     });
 
+    // Resume on the server now that the consumer is fully set up on the client.
     socket.emit('resume-consumer', { consumerId: consumer.id });
 
     const stream = new MediaStream();

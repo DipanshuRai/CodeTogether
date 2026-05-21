@@ -27,7 +27,7 @@ router.post('/auth', verifyJWT, async (req, res) => {
 
     session.allow(room, session.FULL_ACCESS);
 
-    const { status, body } = await session.authorize(); [2]
+    const { status, body } = await session.authorize();
 
     return res.status(status).end(body);
 

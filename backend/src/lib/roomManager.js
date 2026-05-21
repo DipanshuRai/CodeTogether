@@ -18,6 +18,11 @@ const handleLeaveRoom = (io, socket) => {
     console.log(`Cleaning up for user ${username} (${socket.id}) in room ${roomId}`);
 
     if (room.peers[socket.id]) {
+        // Notify remaining peers that each of this user's producers is gone
+        // BEFORE we close the transports, so clients can drop the streams.
+        room.peers[socket.id].producers.forEach(producer => {
+            socket.to(roomId).emit('specific-producer-closed', { producerId: producer.id });
+        });
         room.peers[socket.id].transports.forEach(transport => transport.close());
         delete room.peers[socket.id];
     }
@@ -25,7 +30,7 @@ const handleLeaveRoom = (io, socket) => {
     room.users.delete(socket.id);
     socketToRoomMap.delete(socket.id);
     socket.leave(roomId);
-    
+
     console.log(`User ${username} left room ${roomId}. Users left: ${room.users.size}`);
     if (username) {
         socket.to(roomId).emit("user-left", { socketId: socket.id, name: username });
