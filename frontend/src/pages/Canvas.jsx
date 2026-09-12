@@ -1,145 +1,28 @@
-import { useRef, useState } from "react";
-import { ReactSketchCanvas } from "react-sketch-canvas";
-import { Pen, Eraser, Undo, Redo, Trash2, Download } from "lucide-react";
-import "./styles/Canvas.css";
+import { Tldraw } from 'tldraw';
+import 'tldraw/tldraw.css';
+import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
+import './styles/Canvas.css';
 
-const TOOLS = {
-  PEN: "pen",
-  ERASER: "eraser",
-};
-
-const VIBRANT_COLORS = [
-  "#c2c2c2ff",
-  "#FF9500",
-  "#4CD964",
-  "#00A9FF",
-  "#5856D6",
-  "#FF2D55",
-];
-
+// Standalone whiteboard route. tldraw needs an explicitly sized parent, so
+// the container is locked to the viewport.
 const Canvas = () => {
-  const canvasRef = useRef(null);
-  const [tool, setTool] = useState(TOOLS.PEN);
-  const [strokeColor, setStrokeColor] = useState("#FFFFFF");
-  const [brushSize, setBrushSize] = useState(4);
-  const [canvasColor] = useState("#363636ff");
-
-  const handleClear = () => canvasRef.current?.clearCanvas();
-  const handleUndo = () => canvasRef.current?.undo();
-  const handleRedo = () => canvasRef.current?.redo();
-
-  const handleDownload = () =>
-    canvasRef.current
-      ?.exportImage("png")
-      .then((dataUrl) => {
-        const link = document.createElement("a");
-        link.href = dataUrl;
-        link.download = "whiteboard.png";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      })
-      .catch(console.error);
-
-  const setEraserTool = () => {
-    setTool(TOOLS.ERASER);
-    canvasRef.current?.eraseMode(true);
-  };
-
-  const setPenTool = () => {
-    setTool(TOOLS.PEN);
-    canvasRef.current?.eraseMode(false);
-  };
-
-  const selectColor = (color) => {
-    setStrokeColor(color);
-    setPenTool();
-  };
-
+  const navigate = useNavigate();
   return (
     <div className="whiteboard-container">
-      <div className="toolbar">
-
-        <div className="tool-group">
-          <button
-            onClick={setPenTool}
-            className={tool === TOOLS.PEN ? "active" : ""}
-            title="Pen"
-          >
-            <Pen size={18} />
-          </button>
-          <button
-            onClick={setEraserTool}
-            className={tool === TOOLS.ERASER ? "active" : ""}
-            title="Eraser"
-          >
-            <Eraser size={18} />
-          </button>
-        </div>
-
-        <div className="separator"></div>
-
-        <div className="tool-group">
-          <div className="stroke-slider-container">
-            <input
-              type="range"
-              min="2"
-              max="30"
-              value={brushSize}
-              onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
-              className="stroke-slider"
-              title={`Brush Size: ${brushSize}px`}
-            />
-            <span className="slider-value">{brushSize}</span>
-          </div>
-        </div>
-
-        <div className="separator"></div>
-
-        <div className="tool-group">
-          <div className="color-palette">
-            {VIBRANT_COLORS.map((color) => (
-              <button
-                key={color}
-                style={{ backgroundColor: color }}
-                className={`color-swatch ${
-                  strokeColor === color && tool === TOOLS.PEN ? "active" : ""
-                }`}
-                onClick={() => selectColor(color)}
-                title={color}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="separator"></div>
-
-        <div className="tool-group">
-          <button onClick={handleUndo} title="Undo">
-            <Undo size={18} />
-          </button>
-          <button onClick={handleRedo} title="Redo">
-            <Redo size={18} />
-          </button>
-          <button onClick={handleClear} title="Clear All">
-            <Trash2 size={18} />
-          </button>
-          <button onClick={handleDownload} title="Download">
-            <Download size={18} />
-          </button>
-        </div>
+      <button
+        type="button"
+        className="whiteboard-back-btn"
+        onClick={() => navigate(-1)}
+        title="Go back"
+        aria-label="Go back"
+      >
+        <FaArrowLeft size={14} />
+        <span>Back</span>
+      </button>
+      <div className="whiteboard-stage">
+        <Tldraw />
       </div>
-
-      <ReactSketchCanvas
-        ref={canvasRef}
-        className="sketch-canvas"
-        strokeWidth={brushSize}
-        eraserWidth={brushSize}
-        strokeColor={strokeColor}
-        canvasColor={canvasColor}
-        withTimestamp={false}
-        allowOnlyPointerType="all"
-      />
     </div>
   );
 };

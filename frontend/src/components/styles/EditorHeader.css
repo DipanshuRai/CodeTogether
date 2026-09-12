@@ -141,6 +141,26 @@
   background-color: #c53030;
 }
 
+.control-btn.badge { position: relative; }
+.control-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  border-radius: 10px;
+  padding: 1px 5px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* Smaller controls on tablet to fit the new buttons. */
+@media (max-width: 1200px) {
+  .control-btn { width: 36px; height: 36px; }
+  .media-controls { gap: 6px; }
+}
+
 @media (max-width: 992px) {
   .editor-header {
     padding: 0 1rem;

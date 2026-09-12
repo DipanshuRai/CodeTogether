@@ -53,3 +53,15 @@
 .sash:hover {
   background-color: #6a17c4 !important;
 }
+
+/* Mobile-responsive: stack room view under main editor. */
+@media (max-width: 768px) {
+  .code-editor-layout { min-width: 0; }
+  .content-wrapper { flex-direction: column; }
+  .room-view-wrapper.visible {
+    width: 100%;
+    height: 200px;
+    border-left: none;
+    border-top: 5px solid #333;
+  }
+}
